@@ -1,0 +1,104 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  typecheck:
+    name: Type Check
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - run: npm ci
+      - run: npm run typecheck
+
+  build:
+    name: Build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - run: npm ci
+      - run: npm run build
+      - name: Verify dist artifacts
+        run: |
+          test -f dist/cli.js || (echo "dist/cli.js missing" && exit 1)
+          test -f dist/cli.d.ts || (echo "dist/cli.d.ts missing" && exit 1)
+          echo "Build artifacts verified"
+
+  unit-tests:
+    name: Unit Tests
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        node-version: [18, 20, 22]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node-version }}
+          cache: npm
+      - run: npm ci
+      - run: npm test
+
+  e2e-tests:
+    name: E2E Tests
+    runs-on: ubuntu-latest
+    needs: [build]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - run: npm ci
+      - name: Install CloakBrowser binary
+        run: npx cloakbrowser install || true
+      - name: Install Playwright browsers
+        run: npx playwright install chromium || true
+      - run: npm run test:e2e
+        env:
+          CI: true
+
+  lint:
+    name: Lint
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - run: npm ci
+      - name: Check for console.log
+        run: |
+          matches=$(grep -rn 'console\.log' src/ --include='*.ts' || true)
+          if [ -n "$matches" ]; then
+            echo "::error::Found console.log in source code"
+            echo "$matches"
+            exit 1
+          fi
+          echo "No console.log found"
+      - name: Check for hardcoded secrets
+        run: |
+          matches=$(grep -rnE '(api_key|apikey|secret|password|token|auth_token)\s*[:=]\s*["'"'"'][^"'"'"']+["'"'"']' src/ --include='*.ts' -i || true)
+          if [ -n "$matches" ]; then
+            echo "::error::Potential hardcoded secret found"
+            echo "$matches"
+            exit 1
+          fi
+          echo "No hardcoded secrets found"
