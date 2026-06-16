@@ -45,7 +45,7 @@ The daemon keeps `Browser`, `Context`, and `Page` instances alive between CLI in
 npm install -g @dreamor/cloakbrowser-cli cloakbrowser playwright-core
 ```
 
-Requires Node 18.17+. Peer deps `cloakbrowser` and `playwright-core` are installed alongside.
+Requires Node 20.0+. Peer deps `cloakbrowser` and `playwright-core` are installed alongside.
 
 First real browser launch downloads the stealth Chromium binary (~200MB, cached at `~/.cloakbrowser/`). Pre-download with `cloak binary install`.
 
@@ -253,7 +253,7 @@ Set `CLOAK_CLI_HOME=/custom/path` to relocate. Set `CLOAK_CLI_SOCK=/abs/path/to/
        (one-shot fetch/scrape: in-process, no daemon)
 ```
 
-- 62 RPC methods on the daemon, all listed by `cloak daemon methods`.
+- 56 RPC methods on the daemon, all listed by `cloak daemon methods`.
 - One-shot mode (`fetch`, `scrape`) skips the daemon entirely for stateless requests.
 - Session idle timeout: 1 hour by default; override with `--ttl-ms` on `session new`.
 
