@@ -18,6 +18,24 @@ npm install
 npm run build
 ```
 
+## Scripts Reference
+
+<!-- AUTO-GENERATED from package.json scripts — do not edit manually -->
+
+| Command | Description |
+|---------|-------------|
+| `npm run build` | Compile `src/` → `dist/` with `tsc` |
+| `npm run dev` | Run CLI directly from source (no build step): `npm run dev -- goto <sid> <url>` |
+| `npm run watch` | Auto-rebuild on file change (`tsc --watch`) |
+| `npm run typecheck` | Type-check without emitting (`tsc --noEmit`) |
+| `npm test` | Run unit tests (Vitest, `tests/unit/`) |
+| `npm run test:e2e` | Run end-to-end tests (Vitest, `tests/e2e/`) |
+| `npm run test:all` | Run all tests (unit + e2e) |
+| `npm run clean` | Remove `dist/` directory |
+| `npm run prepublishOnly` | `clean` + `build` — runs automatically before `npm publish` |
+
+<!-- END AUTO-GENERATED -->
+
 ## Development
 
 ```bash

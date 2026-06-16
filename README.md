@@ -238,7 +238,13 @@ cloak goto "$SID" https://example.com
 └── sessions/            Reserved for future per-session caches
 ```
 
-Set `CLOAK_CLI_HOME=/custom/path` to relocate. Set `CLOAK_CLI_SOCK=/abs/path/to/sock` to override the socket only.
+## Environment variables
+
+| Variable | Required | Description | Default |
+|----------|----------|-------------|---------|
+| `CLOAK_CLI_HOME` | No | Override `~/.cloak/` state directory | `~/.cloak` |
+| `CLOAK_CLI_SOCK` | No | Override the daemon Unix socket path | `<CLOAK_CLI_HOME>/daemon.sock` |
+| `PYTHON` | No | Python interpreter for `cloak serve` | `python3` |
 
 ## Architecture
 
