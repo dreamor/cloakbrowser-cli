@@ -57,7 +57,7 @@ cloak session close $SID
 | `cloak daemon stop` | Stop and free all sessions |
 | `cloak daemon status` | Show pid, uptime, session count |
 | `cloak daemon ping` | Round-trip health check |
-| `cloak daemon methods` | List all 60+ RPC methods |
+| `cloak daemon methods` | List all 56 RPC methods |
 
 ### Sessions
 
@@ -103,7 +103,7 @@ cloak session close $SID
 
 ### Self-test
 
-`cloak doctor` · `cloak test [--detector fingerprintjs|browserscan|botd|sannysoft]`
+`cloak doctor` · `cloak test [--detector fingerprintjs|browserscan|botd|sannysoft] [--humanize] [--proxy] [--screenshot <path>] [--wait-until load|domcontentloaded|networkidle|commit] [--timeout <ms>]` • `cloak version`
 
 ## Launch Options
 
@@ -154,7 +154,7 @@ SID=$(cloak session new --storage-state=./state.json | jq -r .data.session_id)
 
 ## Error Codes
 
-`BOOT_ERROR`, `INVALID_ARG`, `INVALID_JSON`, `MISSING_DEPENDENCY`, `DAEMON_NOT_RUNNING`, `DAEMON_ALREADY_RUNNING`, `DAEMON_TIMEOUT`, `SESSION_NOT_FOUND`, `PAGE_NOT_FOUND`, `BROWSER_LAUNCH_FAILED`, `NAVIGATION_FAILED`, `TIMEOUT`, `SELECTOR_NOT_FOUND`, `EVAL_FAILED`, `NETWORK_ERROR`, `IO_ERROR`, `NOT_IMPLEMENTED`, `INTERNAL_ERROR`
+`BOOT_ERROR`, `INVALID_ARG`, `INVALID_JSON`, `MISSING_DEPENDENCY`, `DAEMON_NOT_RUNNING`, `DAEMON_ALREADY_RUNNING`, `DAEMON_TIMEOUT`, `SESSION_NOT_FOUND`, `PAGE_NOT_FOUND`, `BROWSER_LAUNCH_FAILED`, `NAVIGATION_FAILED`, `TIMEOUT`, `SELECTOR_NOT_FOUND`, `EVAL_FAILED`, `NETWORK_ERROR`, `IO_ERROR`, `NOT_IMPLEMENTED`, `UNSUPPORTED_OPERATION`, `INTERNAL_ERROR`
 
 ## First-time Setup
 

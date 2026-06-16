@@ -5,6 +5,17 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Fixed
+
+- **SKILL.md docs staleness** — Fixed RPC method count (60+ → 56), added `UNSUPPORTED_OPERATION` to error codes list, expanded `cloak test` reference.
+- **CONTRIBUTING.md docs staleness** — Fixed Node.js version requirement (18.17+ → 20.0+) and error code count (18 → 19).
+
+### Changed
+
+- **CI: softprops/action-gh-release** — Updated from `v2` (Node 20) to `v3` (Node 24) to avoid deprecation warning as of 2026-06-16.
+
 ## [0.2.1] - 2026-06-16
 
 ### Fixed
