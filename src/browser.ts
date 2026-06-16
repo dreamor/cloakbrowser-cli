@@ -90,6 +90,16 @@ type CloakModule = {
   ensureBinary?: () => Promise<string>;
   binaryInfo?: () => unknown;
   clearCache?: () => unknown;
+  // Optional helpers exported since cloakbrowser v0.3.29.
+  // buildLaunchOptions – builds Playwright launch options from raw config
+  //   (resolves binary path, proxy, geoip, stealth args).
+  // buildContextOptions – builds Playwright context options from raw config
+  //   (strips locale/timezone from context-level opts).
+  // humanizeBrowser – applies human-like behavioral layer to an existing
+  //   Playwright browser instance (lazy-imported, no-op if humanize disabled).
+  buildLaunchOptions?: (raw: Record<string, unknown>) => Promise<Record<string, unknown>>;
+  buildContextOptions?: (raw: Record<string, unknown>) => Record<string, unknown>;
+  humanizeBrowser?: (browser: AnyBrowser, opts?: Record<string, unknown>) => Promise<void>;
 };
 
 let cached: CloakModule | undefined;
