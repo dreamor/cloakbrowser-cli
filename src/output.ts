@@ -33,7 +33,19 @@ function colorize(value: unknown, pretty: boolean): string {
 export function emit(envelope: Envelope, flags: GlobalFlags): void {
   const stream = envelope.ok ? process.stdout : process.stderr;
   const payload = flags.quiet && envelope.ok ? envelope.data : envelope;
-  stream.write(colorize(payload, flags.pretty || isTty()) + '\n');
+  const serialized = colorize(payload, flags.pretty || isTty());
+
+  // If --out is set and this is a successful response, write JSON to file
+  if (flags.out && envelope.ok) {
+    const buf = Buffer.from(serialized + '\n', 'utf-8');
+    const meta = writeBinaryOut(buf, flags.out);
+    // Still output a small envelope so the agent gets the file path
+    const outEnvelope = { ok: true, data: meta, session_id: envelope.session_id, page_id: envelope.page_id };
+    stream.write(colorize(outEnvelope, flags.pretty || isTty()) + '\n');
+    return;
+  }
+
+  stream.write(serialized + '\n');
 }
 
 export function ok(data: unknown, flags: GlobalFlags, ids?: { session_id?: string; page_id?: string }): void {

@@ -1,15 +1,6 @@
 import type { MethodCtx, MethodFn } from './index.js';
 import { CloakError } from '../../errors.js';
-
-const optStr = (p: Record<string, unknown>, k: string): string | undefined =>
-  typeof p[k] === 'string' && p[k] ? (p[k] as string) : undefined;
-const optNum = (p: Record<string, unknown>, k: string): number | undefined =>
-  typeof p[k] === 'number' ? (p[k] as number) : undefined;
-const reqStr = (p: Record<string, unknown>, k: string): string => {
-  const v = p[k];
-  if (typeof v !== 'string' || !v) throw new CloakError('INVALID_ARG', `Missing required: ${k}`);
-  return v;
-};
+import { optStr, optNum, reqStr } from './params.js';
 
 export const waitMethods: Record<string, MethodFn> = {
   'page.wait': async (params, ctx: MethodCtx) => {

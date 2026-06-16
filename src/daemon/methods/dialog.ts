@@ -1,13 +1,6 @@
 import type { MethodCtx, MethodFn } from './index.js';
 import { CloakError } from '../../errors.js';
-
-const optStr = (p: Record<string, unknown>, k: string): string | undefined =>
-  typeof p[k] === 'string' && p[k] ? (p[k] as string) : undefined;
-const reqStr = (p: Record<string, unknown>, k: string): string => {
-  const v = p[k];
-  if (typeof v !== 'string' || !v) throw new CloakError('INVALID_ARG', `Missing required: ${k}`);
-  return v;
-};
+import { optStr, reqStr } from './params.js';
 
 /**
  * Install a one-shot dialog handler on a page. The next dialog will be

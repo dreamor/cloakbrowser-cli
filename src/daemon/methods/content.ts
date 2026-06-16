@@ -2,19 +2,7 @@ import type { MethodCtx, MethodFn } from './index.js';
 import { CloakError } from '../../errors.js';
 import { maybeFileOrBase64 } from '../../output.js';
 import { htmlToMarkdown } from '../../utils/markdown.js';
-
-const optStr = (p: Record<string, unknown>, k: string): string | undefined =>
-  typeof p[k] === 'string' && p[k] ? (p[k] as string) : undefined;
-const optBool = (p: Record<string, unknown>, k: string): boolean | undefined =>
-  typeof p[k] === 'boolean' ? (p[k] as boolean) : undefined;
-const optNum = (p: Record<string, unknown>, k: string): number | undefined =>
-  typeof p[k] === 'number' ? (p[k] as number) : undefined;
-
-function reqStr(p: Record<string, unknown>, k: string): string {
-  const v = p[k];
-  if (typeof v !== 'string' || !v) throw new CloakError('INVALID_ARG', `Missing required: ${k}`);
-  return v;
-}
+import { optStr, optBool, optNum, reqStr } from './params.js';
 
 export const contentMethods: Record<string, MethodFn> = {
   'page.content': async (params, ctx: MethodCtx) => {

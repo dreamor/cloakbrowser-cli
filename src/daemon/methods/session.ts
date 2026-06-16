@@ -2,6 +2,7 @@ import type { MethodCtx, MethodFn } from './index.js';
 import { CloakError } from '../../errors.js';
 import { launchFromResolved, getPageOrCreate } from '../../browser.js';
 import { resolveLaunchOpts, type LaunchOpts } from '../../options.js';
+import { reqStr } from './params.js';
 
 export const sessionMethods: Record<string, MethodFn> = {
   'session.new': async (params: Record<string, unknown>, ctx: MethodCtx) => {
@@ -22,19 +23,19 @@ export const sessionMethods: Record<string, MethodFn> = {
   'session.list': (_p, ctx: MethodCtx) => ctx.registry.listSessions(),
 
   'session.info': (params, ctx: MethodCtx) => {
-    const id = requireString(params, 'session_id');
+    const id = reqStr(params, 'session_id');
     return ctx.registry.describeSession(id);
   },
 
   'session.close': async (params, ctx: MethodCtx) => {
-    const id = requireString(params, 'session_id');
+    const id = reqStr(params, 'session_id');
     const closed = await ctx.registry.closeSession(id);
     return { closed };
   },
 
   'session.save_state': async (params, ctx: MethodCtx) => {
-    const id = requireString(params, 'session_id');
-    const path = requireString(params, 'path');
+    const id = reqStr(params, 'session_id');
+    const path = reqStr(params, 'path');
     const rec = ctx.registry.requireSession(id);
     if (rec.handle.kind !== 'context') {
       // Need a context to call storageState
@@ -47,11 +48,3 @@ export const sessionMethods: Record<string, MethodFn> = {
     return { path };
   },
 };
-
-function requireString(params: Record<string, unknown>, key: string): string {
-  const v = params[key];
-  if (typeof v !== 'string' || !v) {
-    throw new CloakError('INVALID_ARG', `Missing required string param: ${key}`);
-  }
-  return v;
-}

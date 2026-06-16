@@ -23,6 +23,8 @@ export function buildFetchCmd(g: GF): Command {
       const flags = g();
       try {
         const launch = pickLaunchOpts(opts);
+        // screenshotPath: local --screenshot <path> takes precedence, fall back to global --out
+        const localScreenshot = typeof opts.screenshot === 'string' ? opts.screenshot : '';
         const data = await oneShotFetch(url, {
           ...launch,
           ...(opts.waitUntil ? { waitUntil: opts.waitUntil as 'load' | 'domcontentloaded' | 'networkidle' | 'commit' } : {}),
@@ -33,11 +35,11 @@ export function buildFetchCmd(g: GF): Command {
           wantMarkdown: Boolean(opts.markdown),
           ...(opts.selector ? { selector: opts.selector as string } : {}),
           ...(opts.screenshot !== undefined ? {
-            screenshotPath: typeof opts.screenshot === 'string' ? opts.screenshot : '',
+            screenshotPath: localScreenshot || flags.out || '',
           } : {}),
           fullPage: Boolean(opts.fullPage),
           ...(opts.pdf !== undefined ? {
-            pdfPath: typeof opts.pdf === 'string' ? opts.pdf : '',
+            pdfPath: typeof opts.pdf === 'string' ? opts.pdf : flags.out || '',
           } : {}),
         });
         ok(data, flags);

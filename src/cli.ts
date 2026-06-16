@@ -60,7 +60,8 @@ import { buildBinaryCmd, buildServeCmd, buildConnectCmd } from './commands/binar
 import { buildDoctorCmd, buildTestCmd, buildVersionCmd } from './commands/doctor.js';
 import { buildFingerprintCmd } from './commands/fingerprint.js';
 
-const CLI_VERSION = '0.1.1';
+import { version as packageVersion } from '../package.json';
+const CLI_VERSION = packageVersion;
 
 export async function main(argv: string[]): Promise<void> {
   ensureRoot();
