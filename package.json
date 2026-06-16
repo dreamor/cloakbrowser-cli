@@ -1,6 +1,6 @@
 {
   "name": "@dreamor/cloakbrowser-cli",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "description": "Agent-friendly CLI for CloakBrowser — stealth Chromium that passes bot detection. Covers all CloakBrowser features for use by AI agents.",
   "type": "module",
   "bin": {
