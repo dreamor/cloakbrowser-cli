@@ -1,14 +1,7 @@
 import type { MethodCtx, MethodFn } from './index.js';
 import { CloakError } from '../../errors.js';
 import { getDefaultContext } from '../../browser.js';
-
-const optStr = (p: Record<string, unknown>, k: string): string | undefined =>
-  typeof p[k] === 'string' && p[k] ? (p[k] as string) : undefined;
-const reqStr = (p: Record<string, unknown>, k: string): string => {
-  const v = p[k];
-  if (typeof v !== 'string' || !v) throw new CloakError('INVALID_ARG', `Missing required: ${k}`);
-  return v;
-};
+import { optStr, reqStr } from './params.js';
 
 export const storageMethods: Record<string, MethodFn> = {
   'storage.save': async (params, ctx: MethodCtx) => {
