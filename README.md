@@ -94,7 +94,7 @@ Error `code` values: `BOOT_ERROR`, `INVALID_ARG`, `INVALID_JSON`, `MISSING_DEPEN
 | `cloak daemon stop` | Stop and free all sessions. |
 | `cloak daemon status` | pid, uptime, session count. |
 | `cloak daemon ping` | Round-trip health check. |
-| `cloak daemon methods` | List all 60+ RPC methods. |
+| `cloak daemon methods` | List all 56 RPC methods. |
 | `cloak daemon foreground` | Run daemon attached for debugging. |
 
 ### Sessions
