@@ -4,8 +4,8 @@ Thanks for your interest in contributing! This guide covers everything you need 
 
 ## Prerequisites
 
-- **Node.js** ≥ 18.17
-- **npm** ≥ 9
+- **Node.js** ≥ 20.0
+- **npm** ≥ 10
 - **CloakBrowser** ≥ 0.3.0 (`npm install -g cloakbrowser` or as dev dependency)
 - **Playwright** ≥ 1.40.0 (`npm install -g playwright-core`)
 
@@ -60,7 +60,7 @@ src/
 ├── one-shot.ts             # One-shot fetch/scrape (no daemon)
 ├── options.ts              # Launch options types and CLI flags
 ├── output.ts               # Output envelope formatting
-├── errors.ts               # CloakError with 18 error codes
+├── errors.ts               # CloakError with 19 error codes
 ├── browser.ts              # CloakBrowser loader and launch logic
 ├── commands/               # Command builders (one file per domain)
 ├── daemon/                 # Daemon server, protocol, registry
