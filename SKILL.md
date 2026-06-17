@@ -57,7 +57,7 @@ cloak session close @demo
 | `cloak daemon stop` | Stop and free all sessions |
 | `cloak daemon status` | Show pid, uptime, session count |
 | `cloak daemon ping` | Round-trip health check |
-| `cloak daemon methods` | List all 56 RPC methods |
+| `cloak daemon methods` | List all 54 RPC methods |
 
 ### Sessions
 
@@ -92,9 +92,9 @@ cloak click $SID u7
 cloak fill $SID u7 "hello"
 ```
 
-### Wait / Snapshot / Frames
+### Wait / Snapshot / Frames / Batch
 
-`cloak wait <sid> [--selector] [--text] [--url] [--state] [--timeout]` · `sleep` · `snapshot` (a11y tree with uids) · `frames` · `a11y`
+`cloak wait <sid> [--selector] [--text] [--url] [--state visible|hidden|attached|detached] [--load-state load|networkidle] [--timeout] [--stable] [--quiet-ms <ms>]` · `sleep` · `snapshot [--compact] [--limit <n>] [--viewport-only] [--filter role=<v>|tag=<v>|name=<substring>] [--uid <uid>] [--frames]` (a11y tree with uids) · `frames` · `a11y` · `batch [--session <sid>] [--abort-on-error]` (JSON-line RPCs from stdin)
 
 ### Cookies / Storage
 
@@ -174,6 +174,9 @@ cloak session save-state @target ./state.json
 # Later, in a fresh process:
 cloak session new --storage-state=./state.json --name=resumed
 cloak goto @resumed https://app.example.com/dashboard
+
+# 6. Batch multiple RPCs in one connection
+printf '{"method":"page.url","params":{"session_id":"@page"}}\n{"method":"page.title","params":{"session_id":"@page"}}\n' | cloak batch --session @page
 ```
 
 ## Error Codes

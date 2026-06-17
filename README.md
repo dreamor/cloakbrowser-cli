@@ -108,7 +108,7 @@ Error `code` values: `BOOT_ERROR`, `INVALID_ARG`, `INVALID_JSON`, `MISSING_DEPEN
 | `cloak daemon stop` | Stop and free all sessions. |
 | `cloak daemon status` | pid, uptime, session count. |
 | `cloak daemon ping` | Round-trip health check. |
-| `cloak daemon methods` | List all 56 RPC methods. |
+| `cloak daemon methods` | List all 54 RPC methods. |
 | `cloak daemon foreground` | Run daemon attached for debugging. |
 
 ### Sessions
@@ -148,10 +148,10 @@ Text outputs (`content`, `text`, `html`, `markdown`) and one-shot commands (`fet
 
 All interaction commands accept bare cloak UIDs (e.g. `cloak click @session u7` — auto-resolved to `[data-cloak-uid="u7"]`). Add `--snapshot` to any interaction command to also return a compact DOM snapshot after the operation.
 
-### Wait / Snapshot / Frames
-`cloak wait <sid> [--selector] [--text] [--url] [--state visible|hidden|attached|detached] [--load-state load|networkidle] [--timeout]` · `cloak sleep <sid> <ms>` · `cloak snapshot <sid>` (a11y-style tree with uids) · `cloak frames <sid>` · `cloak a11y <sid>` (raw Playwright accessibility tree; returns `UNSUPPORTED_OPERATION` if unavailable — use `snapshot` instead)
+### Wait / Snapshot / Frames / Batch
+`cloak wait <sid> [--selector] [--text] [--url] [--state visible|hidden|attached|detached] [--load-state load|networkidle] [--timeout] [--stable] [--quiet-ms <ms>]` · `cloak sleep <sid> <ms>` · `cloak snapshot <sid> [--compact] [--limit <n>] [--viewport-only] [--viewport-height <px>] [--filter role=<v>|tag=<v>|name=<substring>] [--uid <uid>] [--frames]` · `cloak frames <sid>` · `cloak a11y <sid>` (raw Playwright accessibility tree; returns `UNSUPPORTED_OPERATION` if unavailable — use `snapshot` instead) · `cloak batch [--session <sid>] [--abort-on-error]` (read JSON-line RPCs from stdin)
 
-`snapshot` is the recommended entry point for agent reasoning: it tags every visible interactive element with `data-cloak-uid` and returns role, name, attrs, bounding box, and a usable selector for each.
+`snapshot` is the recommended entry point for agent reasoning: it tags every visible interactive element with `data-cloak-uid` and returns role, name, attrs, bounding box, and a usable selector for each. Use `--compact` to omit bbox/selector (lighter output), `--limit` to cap element count, `--viewport-only` to restrict to in-viewport elements, `--filter` to narrow by role/tag/name, `--uid` to fetch a single element, or `--frames` to scan same-origin iframes.
 
 ### JS evaluation
 `cloak eval <sid> <expression> [--arg <json>]` · `cloak eval-file <sid> <path> [--arg <json>]`
@@ -166,6 +166,9 @@ All interaction commands accept bare cloak UIDs (e.g. `cloak click @session u7` 
 
 ### Dialog
 `cloak dialog <sid> --action=accept|dismiss [--text]` — install a one-shot handler for the next alert/confirm/prompt.
+
+### Batch
+`cloak batch [--session <sid>] [--abort-on-error]` — execute multiple daemon RPCs from stdin JSON lines. Each line: `{"method":"<rpc>","params":{..., "session_id":"<sid>"}}`. Uses a single daemon connection for all calls. Guards: max 200 lines / 1MB by default (override with `CLOAK_BATCH_MAX_LINES` / `CLOAK_BATCH_MAX_BYTES`).
 
 ### One-shot helpers
 `cloak fetch <url> [launch opts] [--wait-until] [--nav-timeout] [--referer] [--text] [--html] [--markdown] [--selector] [--screenshot [path]] [--full-page] [--pdf [path]]`
@@ -273,6 +276,8 @@ cloak goto "$SID" https://example.com
 |----------|----------|-------------|---------|
 | `CLOAK_CLI_HOME` | No | Override `~/.cloak/` state directory | `~/.cloak` |
 | `CLOAK_CLI_SOCK` | No | Override the daemon Unix socket path | `<CLOAK_CLI_HOME>/daemon.sock` |
+| `CLOAK_BATCH_MAX_BYTES` | No | Max batch stdin bytes | `1000000` (1 MB) |
+| `CLOAK_BATCH_MAX_LINES` | No | Max batch stdin lines | `200` |
 | `PYTHON` | No | Python interpreter for `cloak serve` | `python3` |
 
 ## Architecture
@@ -288,9 +293,10 @@ cloak goto "$SID" https://example.com
        (one-shot fetch/scrape: in-process, no daemon)
 ```
 
-- 56 RPC methods on the daemon, all listed by `cloak daemon methods`.
+- 54 RPC methods on the daemon, all listed by `cloak daemon methods`.
 - One-shot mode (`fetch`, `scrape`) skips the daemon entirely for stateless requests.
 - Session idle timeout: 1 hour by default; override with `--ttl-ms` on `session new`.
+- Daemon RPC timeout: 30s default (configurable per-command via `--timeout`).
 
 ## Build from source
 
