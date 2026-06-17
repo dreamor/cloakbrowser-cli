@@ -57,6 +57,7 @@ import {
 import { buildDaemonCmd } from './commands/daemon.js';
 import { buildFetchCmd, buildScrapeCmd } from './commands/oneshot.js';
 import { buildBinaryCmd, buildServeCmd, buildConnectCmd } from './commands/binary.js';
+import { buildBatchCmd } from './commands/batch.js';
 import { buildDoctorCmd, buildTestCmd, buildVersionCmd } from './commands/doctor.js';
 import { buildFingerprintCmd } from './commands/fingerprint.js';
 
@@ -88,6 +89,9 @@ export async function main(argv: string[]): Promise<void> {
   program.addCommand(buildDaemonCmd(globalFlags));
   program.addCommand(buildSessionCmd(globalFlags));
   program.addCommand(buildPageCmd(globalFlags));
+
+  // Batch
+  program.addCommand(buildBatchCmd(globalFlags));
 
   // Navigation
   program.addCommand(buildNavCmd(globalFlags));
