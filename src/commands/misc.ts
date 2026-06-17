@@ -41,10 +41,14 @@ export function buildSleepCmd(g: GF): Command {
 export function buildSnapshotCmd(g: GF): Command {
   return new Command('snapshot').description('Tag interactive elements with uids and return a tree (agent-friendly)').argument('<session_id>')
     .option('--page <id>')
+    .option('--compact', 'Omit bbox and selector from each element (lighter output)')
+    .option('--limit <n>', 'Max number of elements to return')
     .action(async (sid: string, opts: Record<string, unknown>) => {
       const flags = g();
       const params: Record<string, unknown> = {};
       if (opts.page) params.page_id = opts.page;
+      if (opts.compact) params.compact = true;
+      if (opts.limit) params.limit = Number(opts.limit);
       await callDaemon('page.snapshot', params, sid, flags);
     });
 }

@@ -82,12 +82,11 @@ export class DaemonClient {
     const id = nextId();
     const req: RpcRequest = { id, method, params };
     return new Promise<T>((resolve, reject) => {
-      const timer = opts.timeoutMs
-        ? setTimeout(() => {
-            this.inflight.delete(id);
-            reject(new CloakError('TIMEOUT', `RPC ${method} timed out after ${opts.timeoutMs}ms`));
-          }, opts.timeoutMs)
-        : undefined;
+      const ms = opts.timeoutMs ?? 30_000;
+      const timer = setTimeout(() => {
+        this.inflight.delete(id);
+        reject(new CloakError('TIMEOUT', `RPC ${method} timed out after ${ms}ms`));
+      }, ms);
       this.inflight.set(id, { resolve: (v) => resolve(v as T), reject, timer });
       this.sock!.write(JSON.stringify(req) + '\n');
     });

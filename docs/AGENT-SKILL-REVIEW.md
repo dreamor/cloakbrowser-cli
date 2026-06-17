@@ -226,6 +226,7 @@ cloak binary install
 - [x] P1-P7: Named sessions `--name=` / `@name` / `-` last-session
 - [x] P1-P8: Session alias CLI: `alias list/set/remove`
 - [x] P1-P9: 交互命令 `--snapshot` 后置快照
+- [x] 发布 v0.3.0 to npm + GitHub Release（CI 绿 → bump → tag → publish → README 同步）
 
 ### 待完成
 - [ ] 大输出默认落盘 + `--inline` opt-in
