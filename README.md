@@ -26,15 +26,23 @@ cloak scrape https://example.com --selector="h1" --multi
 ```
 
 ### B. **Daemon + long session** (agents driving multi-step flows)
-Best for "log in, click around, scrape over several pages, take screenshots".
+Best for "log in, click around, scrape over several pages, take screenshots". Sessions can be named for easy reuse.
 ```bash
 cloak daemon start
-SID=$(cloak session new --humanize | jq -r .session_id)
-cloak goto $SID https://demo.fingerprint.com
-cloak wait $SID --selector="#visitor-id"
-cloak text $SID --selector="#visitor-id"
-cloak screenshot $SID --path=./fp.png --full-page
-cloak session close $SID
+cloak session new --name=login --humanize
+cloak goto @login https://demo.fingerprint.com
+cloak wait @login --selector="#visitor-id"
+cloak text @login --selector="#visitor-id"
+cloak screenshot @login --path=./fp.png --full-page
+
+# Use `-` to refer to the last-used session
+cloak goto - https://example.com
+
+# Or manage aliases manually
+cloak session alias list
+cloak session alias set mysession s-abc123
+
+cloak session close @login
 ```
 
 The daemon keeps `Browser`, `Context`, and `Page` instances alive between CLI invocations. Each `cloak <verb>` is a tiny RPC over a Unix socket at `~/.cloak/daemon.sock`.
@@ -57,22 +65,27 @@ Default output is single-line JSON on stdout, exit code 0/1. Errors go to stderr
 # 1. Start once per project; survives across many agent turns.
 cloak daemon start >/dev/null
 
-# 2. Create a session, save the id.
-SID=$(cloak session new --humanize | jq -r .data.session_id)
+# 2. Create a named session.
+cloak session new --name=target --humanize
 
-# 3. Drive it.
-cloak goto "$SID" https://target.com
-SNAP=$(cloak snapshot "$SID")              # element uids, roles, names, bboxes
+# 3. Drive it. Use @name aliases instead of raw session IDs.
+cloak goto @target https://target.com
+SNAP=$(cloak snapshot @target)           # element uids, roles, names, bboxes
 # agent reasons over $SNAP, picks an element with uid "u7"
 # UIDs are auto-resolved — you can pass bare "u7" instead of a full selector
-cloak click "$SID" u7
-cloak text "$SID" --selector="#result"
+cloak click @target u7
+cloak text @target --selector="#result"
+
+# 3b. Use --snapshot to get a DOM snapshot after any interaction (saves a round-trip).
+cloak click @target u7 --snapshot        # result includes { clicked, snapshot: {...} }
 
 # 4. Or keep state across turns by saving cookies + localStorage.
-cloak session save-state "$SID" ./state.json
+cloak session save-state @target ./state.json
 # later, in a fresh process:
-SID=$(cloak session new --storage-state=./state.json | jq -r .data.session_id)
-```
+cloak session new --storage-state=./state.json --name=resumed
+
+# 5. Use `-` to refer to the last-used session across single-turn scripts.
+cloak goto - https://example.com
 
 The envelope is stable:
 ```jsonc
@@ -101,11 +114,14 @@ Error `code` values: `BOOT_ERROR`, `INVALID_ARG`, `INVALID_JSON`, `MISSING_DEPEN
 ### Sessions
 | Command | What it does |
 |---|---|
-| `cloak session new [opts]` | Returns `{session_id, page_id}`. See **Launch options** below. |
+| `cloak session new [opts]` | Returns `{session_id, page_id}`. Use `--name <alias>` to save a named reference. |
 | `cloak session list` | All active sessions with metadata. |
-| `cloak session info <id>` | Pages, ttl, launch opts. |
-| `cloak session close <id>` | Close + free resources. |
-| `cloak session save-state <id> <path>` | Dump `storageState` JSON. |
+| `cloak session info <id>` | Pages, ttl, launch opts. Accepts `@name` and `-`. |
+| `cloak session close <id>` | Close + free resources. Accepts `@name` and `-`. |
+| `cloak session save-state <id> <path>` | Dump `storageState` JSON. Accepts `@name` and `-`. |
+| `cloak session alias list` | List all saved aliases. |
+| `cloak session alias set <name> <sid>` | Save or overwrite an alias. |
+| `cloak session alias remove <name>` | Remove a saved alias. |
 
 ### Pages
 | Command | What it does |
@@ -118,7 +134,7 @@ Error `code` values: `BOOT_ERROR`, `INVALID_ARG`, `INVALID_JSON`, `MISSING_DEPEN
 ### Navigation
 `cloak goto <sid> <url>` · `back` · `forward` · `reload` · `url` · `title`
 
-All accept `--page <pid>` and `--timeout <ms>`. `goto` also takes `--wait-until=load|domcontentloaded|networkidle|commit` and `--referer`.
+All accept `--page <pid>` and `--timeout <ms>`. `goto` also takes `--wait-until=load|domcontentloaded|networkidle|commit` and `--referer`. Add `--snapshot` to any navigation command to also return a compact DOM snapshot after the operation.
 
 ### Content extraction
 `content` (HTML) · `text` (innerText, `--selector` to scope) · `html --selector` · `attr <sel> <name>` · `markdown` (Readability + Turndown) · `screenshot [--path] [--full-page] [--selector] [--format png|jpeg] [--quality]` · `pdf [--path] [--format A4] [--landscape]`
@@ -129,6 +145,8 @@ Text outputs (`content`, `text`, `html`, `markdown`) and one-shot commands (`fet
 
 ### Interaction (all use humanize when session was started with `--humanize`)
 `click` · `dblclick` · `fill` · `type` · `press` · `hover` · `focus` · `blur` · `scroll [--to top|bottom|<sel>] [-x] [-y]` · `select <sid> <sel> <value...>` · `check` · `uncheck` · `upload <sid> <sel> <file...>` · `drag <sid> <from> <to>` · `dispatch <sid> <sel> <event_type> [--init <json>]`
+
+All interaction commands accept bare cloak UIDs (e.g. `cloak click @session u7` — auto-resolved to `[data-cloak-uid="u7"]`). Add `--snapshot` to any interaction command to also return a compact DOM snapshot after the operation.
 
 ### Wait / Snapshot / Frames
 `cloak wait <sid> [--selector] [--text] [--url] [--state visible|hidden|attached|detached] [--load-state load|networkidle] [--timeout]` · `cloak sleep <sid> <ms>` · `cloak snapshot <sid>` (a11y-style tree with uids) · `cloak frames <sid>` · `cloak a11y <sid>` (raw Playwright accessibility tree; returns `UNSUPPORTED_OPERATION` if unavailable — use `snapshot` instead)
@@ -185,30 +203,36 @@ Context-level options or `--persistent` cause `cloak` to use `launchContext` / `
 ### Drive a login form with humanize
 ```bash
 cloak daemon start
-SID=$(cloak session new --humanize --proxy=http://u:p@residential:port --geoip | jq -r .data.session_id)
-cloak goto "$SID" https://app.example.com/login
-cloak fill "$SID" 'input[name=email]' 'me@example.com'
-cloak fill "$SID" 'input[name=password]' "$PASSWORD"
-cloak click "$SID" 'button[type=submit]'
-cloak wait "$SID" --url='**/dashboard**'
-cloak session save-state "$SID" ./auth.json
-cloak session close "$SID"
+cloak session new --name=login --humanize --proxy=http://u:p@residential:port --geoip
+cloak goto @login https://app.example.com/login
+cloak fill @login 'input[name=email]' 'me@example.com'
+cloak fill @login 'input[name=password]' "$PASSWORD"
+cloak click @login 'button[type=submit]'
+cloak wait @login --url='**/dashboard**'
+cloak session save-state @login ./auth.json
+cloak session close @login
 ```
 
 ### Resume the same session next run
 ```bash
-SID=$(cloak session new --storage-state=./auth.json --humanize | jq -r .data.session_id)
-cloak goto "$SID" https://app.example.com/dashboard
-cloak screenshot "$SID" --path=./dashboard.png --full-page
+cloak session new --name=dashboard --storage-state=./auth.json --humanize
+cloak goto @dashboard https://app.example.com/dashboard
+cloak screenshot @dashboard --path=./dashboard.png --full-page
 ```
 
 ### Agent reasoning over the page (snapshot + uid)
 ```bash
-SID=$(cloak session new | jq -r .data.session_id)
-cloak goto "$SID" https://example.com
-cloak snapshot "$SID" --pretty
+cloak session new --name=page
+cloak goto @page https://example.com
+cloak snapshot @page --pretty
 # Agent picks { uid: "u3", role: "link", name: "More information..." }
-cloak click "$SID" '[data-cloak-uid="u3"]'
+cloak click @page u3
+```
+
+### After-action snapshot (saves a round-trip)
+```bash
+cloak click @page u7 --snapshot
+# → { ok: true, data: { clicked: "u7", snapshot: { items: [...], url: "...", title: "..." } } }
 ```
 
 ### Beat fingerprint detection
@@ -238,6 +262,8 @@ cloak goto "$SID" https://example.com
 ~/.cloak/                Local state
 ├── daemon.sock          Unix socket for CLI ↔ daemon RPC
 ├── daemon.pid           Daemon process id
+├── aliases.json         Session name aliases (@name → s-xxx)
+├── last-session.txt     Last-used session ID (for `-` shorthand)
 └── sessions/            Reserved for future per-session caches
 ```
 
