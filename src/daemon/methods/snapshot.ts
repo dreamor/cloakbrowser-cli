@@ -1,6 +1,6 @@
 import type { MethodCtx, MethodFn } from './index.js';
 import { CloakError } from '../../errors.js';
-import { optStr, reqStr, SNAPSHOT_TAGGER_SCRIPT, filterSnapshot, type SnapshotItem, type SnapshotFilterOpts } from './params.js';
+import { optStr, reqStr, SNAPSHOT_TAGGER_SCRIPT, SNAPSHOT_IFRAME_SCRIPT, filterSnapshot, type SnapshotItem, type SnapshotFilterOpts } from './params.js';
 
 /**
  * Build a simplified snapshot of the page, similar to Playwright's accessibility tree
@@ -14,14 +14,23 @@ export const snapshotMethods: Record<string, MethodFn> = {
     const sid = reqStr(params, 'session_id');
     const ref = ctx.registry.requirePage(sid, optStr(params, 'page_id'));
 
-    // Tag interactive elements
+    // Tag interactive elements — use iframe-aware script when frames requested
+    const script = params.frames ? SNAPSHOT_IFRAME_SCRIPT : SNAPSHOT_TAGGER_SCRIPT;
     const tagged = (await ref.page.evaluate(
-      SNAPSHOT_TAGGER_SCRIPT
+      script
     )) as { items: Record<string, unknown>[]; url: string; title: string };
 
     const filterOpts: SnapshotFilterOpts = {};
     if (params.compact === true) filterOpts.compact = true;
     if (typeof params.limit === 'number') filterOpts.limit = params.limit;
+    if (typeof params.viewport_only === 'boolean') {
+      filterOpts.viewportOnly = params.viewport_only;
+      filterOpts.viewportHeight = typeof params.viewport_height === 'number'
+        ? params.viewport_height
+        : undefined;
+    }
+    if (typeof params.filter === 'string') filterOpts.filter = params.filter;
+    if (typeof params.uid === 'string' && params.uid) filterOpts.uid = params.uid;
 
     const filtered = filterSnapshot(
       { items: tagged.items as SnapshotItem[], url: tagged.url, title: tagged.title },
