@@ -13,6 +13,8 @@ export function buildWaitCmd(g: GF): Command {
     .option('--load-state <state>', 'load|domcontentloaded|networkidle')
     .option('--timeout <ms>')
     .option('--page <id>')
+    .option('--stable', 'Wait until the DOM is stable (no mutations for N ms)')
+    .option('--quiet-ms <ms>', 'Quiet period in ms for --stable (default: 500, max: 5000)')
     .action(async (sid: string, opts: Record<string, unknown>) => {
       const flags = g();
       const params: Record<string, unknown> = {};
@@ -23,6 +25,8 @@ export function buildWaitCmd(g: GF): Command {
       if (opts.loadState) params.load_state = opts.loadState;
       if (opts.timeout) params.timeout = Number(opts.timeout);
       if (opts.page) params.page_id = opts.page;
+      if (opts.stable) params.stable = true;
+      if (opts.quietMs) params.quiet_ms = Number(opts.quietMs);
       await callDaemon('page.wait', params, sid, flags);
     });
 }

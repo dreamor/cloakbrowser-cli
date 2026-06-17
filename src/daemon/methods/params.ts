@@ -146,6 +146,36 @@ export const SNAPSHOT_TAGGER_SCRIPT = `(() => {
 })()`;
 
 /**
+ * In-page polling script for DOM stability detection (used by wait --stable).
+ * Playwright's waitForFunction evaluates this body repeatedly.
+ *
+ * - First call: sets up a MutationObserver on <html>, records last mutation timestamp.
+ * - Subsequent calls: checks if the quiet period (arg) has elapsed since the last mutation.
+ * - Returns `{ stable: true, mutations: <count> }` when stable, `false` to keep polling.
+ */
+export const WAIT_STABLE_SCRIPT = `
+  if (!window.__cloakStable) {
+    window.__cloakStable = { lastMutation: Date.now(), mutationCount: 0 };
+    const obs = new MutationObserver(() => {
+      window.__cloakStable.lastMutation = Date.now();
+      window.__cloakStable.mutationCount++;
+    });
+    try {
+      obs.observe(document.documentElement, {
+        childList: true, subtree: true, attributes: true, characterData: true,
+      });
+    } catch (e) {
+      return { stable: false, reason: String(e) };
+    }
+  }
+  const quietMs = Math.min(Math.max(Number(arg) || 500, 100), 5000);
+  const elapsed = Date.now() - window.__cloakStable.lastMutation;
+  return elapsed >= quietMs
+    ? { stable: true, mutations: window.__cloakStable.mutationCount }
+    : false;
+`;
+
+/**
  * In-page script that tags interactive + content elements within the main document
  * AND all same-origin iframes with `data-cloak-uid`, then returns a flat snapshot
  * of visible elements. Each element includes an `origin` field set to `"main"` or
