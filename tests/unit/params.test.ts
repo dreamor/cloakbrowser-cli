@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { optStr, reqStr, optNum, optBool, resolveUid, filterSnapshot, type SnapshotItem } from '../../src/daemon/methods/params.js';
+import { optStr, reqStr, optNum, optBool, resolveUid, filterSnapshot, SNAPSHOT_IFRAME_SCRIPT, type SnapshotItem } from '../../src/daemon/methods/params.js';
 
 describe('optStr', () => {
   it('returns value for string key', () => {
@@ -145,12 +145,13 @@ describe('filterSnapshot', () => {
     { uid: 'u2', role: 'link', tag: 'a', name: 'Learn more', bbox: { x: 10, y: 200, w: 80, h: 20 }, selector: '[data-cloak-uid="u2"]' },
     { uid: 'u3', role: 'textbox', tag: 'input', name: 'Email', bbox: { x: 10, y: 60, w: 200, h: 30 }, selector: '[data-cloak-uid="u3"]' },
     { uid: 'u4', role: 'checkbox', tag: 'input', name: 'Agree', bbox: { x: 10, y: 120, w: 20, h: 20 }, selector: '[data-cloak-uid="u4"]' },
+    { uid: 'u5', role: 'button', tag: 'button', name: 'Cancel', bbox: { x: 300, y: 10, w: 80, h: 30 }, selector: '[data-cloak-uid="u5"]' },
   ];
 
   describe('limit', () => {
     it('returns all items when limit is undefined', () => {
       const r = filterSnapshot({ items: sample, url: '', title: '' }, {});
-      expect(r.length).toBe(4);
+      expect(r.length).toBe(5);
     });
 
     it('returns N items when limit is set', () => {
@@ -162,7 +163,7 @@ describe('filterSnapshot', () => {
 
     it('returns all items when limit exceeds count', () => {
       const r = filterSnapshot({ items: sample, url: '', title: '' }, { limit: 999 });
-      expect(r.length).toBe(4);
+      expect(r.length).toBe(5);
     });
 
     it('returns empty when limit is 0', () => {
@@ -174,7 +175,7 @@ describe('filterSnapshot', () => {
   describe('compact', () => {
     it('strips bbox and selector when compact is true', () => {
       const r = filterSnapshot({ items: sample, url: '', title: '' }, { compact: true });
-      expect(r.length).toBe(4);
+      expect(r.length).toBe(5);
       for (const item of r) {
         expect(item.bbox).toBeUndefined();
         expect(item.selector).toBeUndefined();
@@ -186,5 +187,97 @@ describe('filterSnapshot', () => {
       expect(r[0].bbox).toBeDefined();
       expect(r[0].selector).toBeDefined();
     });
+  });
+
+  describe('viewportOnly', () => {
+    it('filters out elements with bbox entirely above viewport top', () => {
+      // Elements with y=200 should be filtered when viewportHeight=150
+      const r = filterSnapshot({ items: sample, url: '', title: '' }, { viewportOnly: true, viewportHeight: 150 });
+      const uids = r.map(i => i.uid);
+      expect(uids).not.toContain('u2'); // y=200 > 150
+      expect(uids).toContain('u1');
+      expect(uids).toContain('u3');
+      expect(uids).toContain('u4');
+    });
+
+    it('includes elements partially in viewport', () => {
+      // Element u2 starts at y=200, viewportHeight=210 means it's partially visible
+      const r = filterSnapshot({ items: sample, url: '', title: '' }, { viewportOnly: true, viewportHeight: 210 });
+      expect(r.map(i => i.uid)).toContain('u2');
+    });
+
+    it('returns all elements when viewportHeight is not specified', () => {
+      const r = filterSnapshot({ items: sample, url: '', title: '' }, { viewportOnly: true });
+      expect(r.length).toBe(5);
+    });
+  });
+
+  describe('filter (role/tag/name)', () => {
+    it('filters by role', () => {
+      const r = filterSnapshot({ items: sample, url: '', title: '' }, { filter: 'role=button' });
+      expect(r.length).toBe(2);
+      expect(r[0].uid).toBe('u1');
+      expect(r[1].uid).toBe('u5');
+    });
+
+    it('filters by tag', () => {
+      const r = filterSnapshot({ items: sample, url: '', title: '' }, { filter: 'tag=input' });
+      expect(r.length).toBe(2);
+    });
+
+    it('filters by name substring', () => {
+      const r = filterSnapshot({ items: sample, url: '', title: '' }, { filter: 'name=Sub' });
+      expect(r.length).toBe(1);
+      expect(r[0].uid).toBe('u1');
+    });
+
+    it('returns empty for no match', () => {
+      const r = filterSnapshot({ items: sample, url: '', title: '' }, { filter: 'role=slider' });
+      expect(r.length).toBe(0);
+    });
+  });
+
+  describe('uid', () => {
+    it('returns single element matching the uid', () => {
+      const r = filterSnapshot({ items: sample, url: '', title: '' }, { uid: 'u3' });
+      expect(r.length).toBe(1);
+      expect(r[0].name).toBe('Email');
+    });
+
+    it('returns empty for non-existent uid', () => {
+      const r = filterSnapshot({ items: sample, url: '', title: '' }, { uid: 'u999' });
+      expect(r.length).toBe(0);
+    });
+
+    it('ignores uid filter when uid is empty', () => {
+      const r = filterSnapshot({ items: sample, url: '', title: '' }, { uid: '' });
+      expect(r.length).toBe(5);
+    });
+  });
+
+  describe('combined filters', () => {
+    it('compact + limit together', () => {
+      const r = filterSnapshot({ items: sample, url: '', title: '' }, { compact: true, limit: 2 });
+      expect(r.length).toBe(2);
+      expect(r[0].bbox).toBeUndefined();
+      expect(r[0].selector).toBeUndefined();
+    });
+
+    it('filter + limit together', () => {
+      const r = filterSnapshot({ items: sample, url: '', title: '' }, { filter: 'tag=input', limit: 1 });
+      expect(r.length).toBe(1);
+      expect(r[0].uid).toBe('u3');
+    });
+  });
+});
+
+describe('SNAPSHOT_IFRAME_SCRIPT', () => {
+  it('is a non-empty string', () => {
+    expect(typeof SNAPSHOT_IFRAME_SCRIPT).toBe('string');
+    expect(SNAPSHOT_IFRAME_SCRIPT.length).toBeGreaterThan(0);
+  });
+
+  it('contains querySelectorAll for iframe traversal', () => {
+    expect(SNAPSHOT_IFRAME_SCRIPT).toContain('iframe');
   });
 });

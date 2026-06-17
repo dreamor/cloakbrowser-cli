@@ -43,12 +43,22 @@ export function buildSnapshotCmd(g: GF): Command {
     .option('--page <id>')
     .option('--compact', 'Omit bbox and selector from each element (lighter output)')
     .option('--limit <n>', 'Max number of elements to return')
+    .option('--viewport-only', 'Only include elements visible in the viewport')
+    .option('--viewport-height <px>', 'Viewport height for viewport-only filtering')
+    .option('--filter <expr>', 'Filter by role=<v>, tag=<v>, or name=<substring>')
+    .option('--uid <uid>', 'Return only the element with this exact uid')
+    .option('--frames', 'Include elements from same-origin iframes')
     .action(async (sid: string, opts: Record<string, unknown>) => {
       const flags = g();
       const params: Record<string, unknown> = {};
       if (opts.page) params.page_id = opts.page;
       if (opts.compact) params.compact = true;
       if (opts.limit) params.limit = Number(opts.limit);
+      if (opts.viewportOnly) params.viewport_only = true;
+      if (opts.viewportHeight) params.viewport_height = Number(opts.viewportHeight);
+      if (opts.filter) params.filter = opts.filter;
+      if (opts.uid) params.uid = opts.uid;
+      if (opts.frames) params.frames = true;
       await callDaemon('page.snapshot', params, sid, flags);
     });
 }
