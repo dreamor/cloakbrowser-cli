@@ -5,6 +5,23 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Added
+
+- **UID auto-resolution** — Interaction commands (`click`, `fill`, `hover`, etc.) now accept bare cloak UIDs (`u7`, `u123`). They are automatically resolved to `[data-cloak-uid="..."]` selectors, eliminating the need for manual selector concatenation. (F1)
+- **`--out` for text and one-shot commands** — The global `--out <path>` flag now works for all text outputs (`content`, `text`, `html`, `markdown`) and one-shot commands (`fetch`, `scrape`). When set, JSON is written to the specified file and a metadata envelope `{path, size, sha256}` is returned. (F2, F3)
+- **Shared parameter helpers** — `src/daemon/methods/params.ts` provides shared `optStr`, `reqStr`, `optNum`, `optBool`, and `resolveUid` functions, replacing 8+ redundant copies across daemon method files. (F12)
+
+### Fixed
+
+- **`oneShotFetch` navigation failures** — When `page.goto()` throws (timeout, DNS failure, etc.), the function now returns a partial result with `status: 'navigation-failed'` instead of crashing with an unhandled exception. (F5)
+- **`--version` from `package.json`** — CLI version is now read dynamically from `package.json` instead of the hardcoded `'0.1.1'` in `src/cli.ts`, preventing drift. (F4)
+
+### Changed
+
+- **Docs updated** — SKILL.md and README.md updated with uid auto-resolution docs and `--out` coverage details.
+
 ## [0.2.2] - 2026-06-16
 
 ### Fixed

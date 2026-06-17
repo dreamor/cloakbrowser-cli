@@ -79,7 +79,15 @@ cloak session close $SID
 
 ### Interaction (humanize-aware)
 
+All interaction commands accept both CSS selectors and bare cloak UIDs (`u7` → auto-resolved to `[data-cloak-uid="u7"]`):
+
 `click` · `dblclick` · `fill` · `type` · `press` · `hover` · `focus` · `blur` · `scroll` · `select` · `check` · `uncheck` · `upload` · `drag` · `dispatch`
+
+```bash
+# Bare uid — auto-resolved
+cloak click $SID u7
+cloak fill $SID u7 "hello"
+```
 
 ### Wait / Snapshot / Frames
 
@@ -130,6 +138,14 @@ Default output is single-line JSON on stdout, exit code 0/1:
 
 Add `--pretty` for human-readable colored output. Add `--quiet` to emit only `data` on success.
 
+### Large Output Handling
+
+For binary or large text outputs:
+
+- **`--path <file>`** (local flag) or **`--out <path>`** (global flag): writes output to a file and returns `{"path","size","sha256"}` metadata instead of inline base64/JSON
+- Applies to: `screenshot`, `pdf`, `content`, `text`, `html`, `markdown`, and one-shot `fetch`/`scrape`
+- Without these flags, text commands return JSON on stdout and screenshots/PDFs return base64
+
 ## Agent Integration Pattern
 
 ```bash
@@ -143,7 +159,8 @@ SID=$(cloak session new --humanize | jq -r .data.session_id)
 cloak goto "$SID" https://target.com
 SNAP=$(cloak snapshot "$SID")
 # Agent reasons over $SNAP, picks element uid "u7"
-cloak click "$SID" '[data-cloak-uid="u7"]'
+# UIDs are auto-resolved — you can pass bare "u7" instead of '[data-cloak-uid="u7"]'
+cloak click "$SID" u7
 cloak text "$SID" --selector="#result"
 
 # 4. Persist state across turns
