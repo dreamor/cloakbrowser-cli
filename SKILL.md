@@ -39,12 +39,12 @@ Best for "log in, click around, scrape over several pages":
 
 ```bash
 cloak daemon start
-SID=$(cloak session new --humanize | jq -r .data.session_id)
-cloak goto $SID https://demo.fingerprint.com
-cloak wait $SID --selector="#visitor-id"
-cloak text $SID --selector="#visitor-id"
-cloak screenshot $SID --path=./fp.png --full-page
-cloak session close $SID
+cloak session new --name=demo --humanize
+cloak goto @demo https://demo.fingerprint.com
+cloak wait @demo --selector="#visitor-id"
+cloak text @demo --selector="#visitor-id"
+cloak screenshot @demo --path=./fp.png --full-page
+cloak session close @demo
 ```
 
 ## Command Reference
