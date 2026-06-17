@@ -5,13 +5,24 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased]
+## [0.4.0] - 2026-06-17
 
 ### Added
 
+- **Snapshot filters** — `--compact` (strips bbox/selector), `--limit <n>` (max elements), `--viewport-only` (elements in viewport), `--filter <expr>` (by role/tag/name), `--uid <uid>` (single element). All available on the `cloak snapshot` command. (O2)
+- **Snapshot iframe support** — `--frames` flag includes elements from same-origin iframes in the snapshot result, with an `origin` field for disambiguation. (O4)
+- **`cloak batch` command** — Execute multiple daemon RPCs from stdin JSON lines. Supports `--session <sid>` (default session) and `--abort-on-error`. Guards: `CLOAK_BATCH_MAX_BYTES` (1MB) and `CLOAK_BATCH_MAX_LINES` (200). (O1)
+- **`wait --stable`** — New wait condition using MutationObserver to detect DOM stability. Configurable quiet period via `--quiet-ms` (default 500ms). Returns `{ stable, mutations }`. (O5)
+- **Shared `SNAPSHOT_TAGGER_SCRIPT`** — In-page element tagger extracted to `params.ts`, shared between `page.snapshot` and `maybeSnapshot` to eliminate code duplication. (R2)
+
 ### Fixed
 
+- **Missing `stable` in wait error message** — Error prompt now lists `stable` as a valid wait condition. (O5 cleanup)
+
 ### Changed
+
+- **Default RPC timeout** — `DaemonClient.call()` now defaults to 30s timeout instead of no timeout. Can be overridden per-call. (O3)
+- **Code deduplication** — Removed duplicate `optStr`/`reqStr` definitions from `eval.ts` and `network.ts`; all daemon methods now import from `params.ts`. (R1)
 
 ## [0.3.0] - 2026-06-17
 
