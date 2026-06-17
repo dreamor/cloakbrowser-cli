@@ -1,6 +1,7 @@
 import type { MethodCtx, MethodFn } from './index.js';
 import { CloakError } from '../../errors.js';
 import { optStr, optNum, optBool, reqStr, resolveUid } from './params.js';
+import { maybeSnapshot } from './snapshot-helper.js';
 
 function commonClickOpts(p: Record<string, unknown>): Record<string, unknown> {
   const o: Record<string, unknown> = {};
@@ -23,7 +24,7 @@ export const interactionMethods: Record<string, MethodFn> = {
     const sel = resolveUid(rawSel);
     const ref = ctx.registry.requirePage(sid, optStr(params, 'page_id'));
     await ref.page.click(sel, commonClickOpts(params));
-    return { clicked: rawSel };
+    return maybeSnapshot({ clicked: rawSel }, ref, params);
   },
 
   'page.dblclick': async (params, ctx: MethodCtx) => {
@@ -32,7 +33,7 @@ export const interactionMethods: Record<string, MethodFn> = {
     const sel = resolveUid(rawSel);
     const ref = ctx.registry.requirePage(sid, optStr(params, 'page_id'));
     await ref.page.dblclick(sel, commonClickOpts(params));
-    return { dblclicked: rawSel };
+    return maybeSnapshot({ dblclicked: rawSel }, ref, params);
   },
 
   'page.fill': async (params, ctx: MethodCtx) => {
@@ -45,7 +46,7 @@ export const interactionMethods: Record<string, MethodFn> = {
     if (optNum(params, 'timeout') !== undefined) opts.timeout = optNum(params, 'timeout');
     if (optBool(params, 'force') !== undefined) opts.force = optBool(params, 'force');
     await ref.page.fill(sel, value, opts);
-    return { filled: rawSel };
+    return maybeSnapshot({ filled: rawSel }, ref, params);
   },
 
   'page.type': async (params, ctx: MethodCtx) => {
@@ -57,7 +58,7 @@ export const interactionMethods: Record<string, MethodFn> = {
     const opts: Record<string, unknown> = {};
     if (optNum(params, 'delay') !== undefined) opts.delay = optNum(params, 'delay');
     await ref.page.type(sel, text, opts);
-    return { typed: rawSel };
+    return maybeSnapshot({ typed: rawSel }, ref, params);
   },
 
   'page.press': async (params, ctx: MethodCtx) => {
@@ -67,10 +68,8 @@ export const interactionMethods: Record<string, MethodFn> = {
     const rawSel = optStr(params, 'selector');
     const sel = rawSel ? resolveUid(rawSel) : undefined;
     if (sel) {
-      // page.press goes via locator
       const locOpts: Record<string, unknown> = {};
       if (optNum(params, 'delay') !== undefined) locOpts.delay = optNum(params, 'delay');
-      // Use evaluate fallback if no direct press: cloakbrowser uses Playwright so page.press exists
       const pressMaybe = (ref.page as unknown as { press?: (s: string, k: string, o?: unknown) => Promise<void> }).press;
       if (typeof pressMaybe === 'function') {
         await pressMaybe.call(ref.page, sel, key, locOpts);
@@ -81,7 +80,7 @@ export const interactionMethods: Record<string, MethodFn> = {
     } else {
       await ref.page.keyboard.press(key);
     }
-    return { pressed: key };
+    return maybeSnapshot({ pressed: key }, ref, params);
   },
 
   'page.hover': async (params, ctx: MethodCtx) => {
@@ -90,7 +89,7 @@ export const interactionMethods: Record<string, MethodFn> = {
     const sel = resolveUid(rawSel);
     const ref = ctx.registry.requirePage(sid, optStr(params, 'page_id'));
     await ref.page.hover(sel);
-    return { hovered: rawSel };
+    return maybeSnapshot({ hovered: rawSel }, ref, params);
   },
 
   'page.focus': async (params, ctx: MethodCtx) => {
@@ -99,7 +98,7 @@ export const interactionMethods: Record<string, MethodFn> = {
     const sel = resolveUid(rawSel);
     const ref = ctx.registry.requirePage(sid, optStr(params, 'page_id'));
     await ref.page.focus(sel);
-    return { focused: rawSel };
+    return maybeSnapshot({ focused: rawSel }, ref, params);
   },
 
   'page.blur': async (params, ctx: MethodCtx) => {
@@ -108,7 +107,7 @@ export const interactionMethods: Record<string, MethodFn> = {
     const sel = resolveUid(rawSel);
     const ref = ctx.registry.requirePage(sid, optStr(params, 'page_id'));
     await ref.page.evaluate(`(sel) => { const el = document.querySelector(sel); if (el && 'blur' in el) el.blur(); }`, sel);
-    return { blurred: rawSel };
+    return maybeSnapshot({ blurred: rawSel }, ref, params);
   },
 
   'page.scroll': async (params, ctx: MethodCtx) => {
@@ -130,7 +129,7 @@ export const interactionMethods: Record<string, MethodFn> = {
     } else if (x !== undefined || y !== undefined) {
       await ref.page.evaluate(`(coord) => window.scrollTo(coord.x, coord.y)`, { x: x ?? 0, y: y ?? 0 });
     }
-    return { scrolled: true };
+    return maybeSnapshot({ scrolled: true }, ref, params);
   },
 
   'page.select': async (params, ctx: MethodCtx) => {
@@ -140,7 +139,7 @@ export const interactionMethods: Record<string, MethodFn> = {
     const ref = ctx.registry.requirePage(sid, optStr(params, 'page_id'));
     const values = params.values;
     const result = await ref.page.selectOption(sel, values as unknown);
-    return { selected: result };
+    return maybeSnapshot({ selected: result }, ref, params);
   },
 
   'page.check': async (params, ctx: MethodCtx) => {
@@ -149,7 +148,7 @@ export const interactionMethods: Record<string, MethodFn> = {
     const sel = resolveUid(rawSel);
     const ref = ctx.registry.requirePage(sid, optStr(params, 'page_id'));
     await ref.page.check(sel);
-    return { checked: rawSel };
+    return maybeSnapshot({ checked: rawSel }, ref, params);
   },
 
   'page.uncheck': async (params, ctx: MethodCtx) => {
@@ -158,7 +157,7 @@ export const interactionMethods: Record<string, MethodFn> = {
     const sel = resolveUid(rawSel);
     const ref = ctx.registry.requirePage(sid, optStr(params, 'page_id'));
     await ref.page.uncheck(sel);
-    return { unchecked: rawSel };
+    return maybeSnapshot({ unchecked: rawSel }, ref, params);
   },
 
   'page.upload': async (params, ctx: MethodCtx) => {
@@ -171,7 +170,7 @@ export const interactionMethods: Record<string, MethodFn> = {
       throw new CloakError('INVALID_ARG', 'files must be an array of paths');
     }
     await ref.page.setInputFiles(sel, files);
-    return { uploaded: files.length };
+    return maybeSnapshot({ uploaded: files.length }, ref, params);
   },
 
   'page.drag': async (params, ctx: MethodCtx) => {
@@ -182,7 +181,7 @@ export const interactionMethods: Record<string, MethodFn> = {
     const to = resolveUid(rawTo);
     const ref = ctx.registry.requirePage(sid, optStr(params, 'page_id'));
     await ref.page.dragAndDrop(from, to);
-    return { dragged: { from: rawFrom, to: rawTo } };
+    return maybeSnapshot({ dragged: { from: rawFrom, to: rawTo } }, ref, params);
   },
 
   'page.dispatch_event': async (params, ctx: MethodCtx) => {
@@ -192,6 +191,6 @@ export const interactionMethods: Record<string, MethodFn> = {
     const type = reqStr(params, 'event_type');
     const ref = ctx.registry.requirePage(sid, optStr(params, 'page_id'));
     await ref.page.dispatchEvent(sel, type, params.event_init);
-    return { dispatched: type };
+    return maybeSnapshot({ dispatched: type }, ref, params);
   },
 };

@@ -223,12 +223,13 @@ cloak binary install
 - [x] F4: `--version` 从 `package.json` 读取
 - [x] F5: `oneShotFetch` re-throw 修复
 - [x] F12: optStr/reqStr 去重
+- [x] P1-P7: Named sessions `--name=` / `@name` / `-` last-session
+- [x] P1-P8: Session alias CLI: `alias list/set/remove`
+- [x] P1-P9: 交互命令 `--snapshot` 后置快照
 
 ### 待完成
 - [ ] 大输出默认落盘 + `--inline` opt-in
 - [ ] 自动启动 daemon + idle shutdown
-- [ ] Named sessions `--name=` / `@name` / `-` last-session
-- [ ] 交互命令 `--snapshot` 后置快照
 - [ ] `cloak introspect` 输出 JSON Schema
 - [ ] 结构化错误（hint / kind / recoverable / suggestions）
 - [ ] SKILL.md 拆分 + recipes/ 目录

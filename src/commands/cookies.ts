@@ -1,17 +1,10 @@
 import { readFileSync } from 'node:fs';
 import { Command } from 'commander';
-import { getClient } from '../client.js';
-import { ok, fail, type GlobalFlags } from '../output.js';
+import { callDaemon } from './shared.js';
+import { fail, type GlobalFlags } from '../output.js';
 import { CloakError } from '../errors.js';
 
 type GF = () => GlobalFlags;
-
-function emit(method: string, params: Record<string, unknown>, sid: string, flags: GlobalFlags): Promise<void> {
-  return getClient().call(method, params).then(
-    (data) => ok(data, flags, { session_id: sid }),
-    (err) => fail(err, flags)
-  );
-}
 
 export function buildCookiesCmd(g: GF): Command {
   const cmd = new Command('cookies').description('Cookie management');
@@ -20,9 +13,9 @@ export function buildCookiesCmd(g: GF): Command {
     .option('--url <url>')
     .action(async (sid: string, opts: Record<string, unknown>) => {
       const flags = g();
-      const params: Record<string, unknown> = { session_id: sid };
+      const params: Record<string, unknown> = {};
       if (opts.url) params.url = opts.url;
-      await emit('cookies.get', params, sid, flags);
+      await callDaemon('cookies.get', params, sid, flags);
     });
 
   cmd.command('set <session_id>')
@@ -35,13 +28,12 @@ export function buildCookiesCmd(g: GF): Command {
         if (opts.file) cookies = JSON.parse(readFileSync(opts.file as string, 'utf8'));
         else if (opts.json) cookies = JSON.parse(opts.json as string);
         else {
-          // try stdin
           cookies = JSON.parse(readStdin());
         }
         if (!Array.isArray(cookies)) {
           throw new CloakError('INVALID_ARG', 'cookies must be a JSON array');
         }
-        await emit('cookies.set', { session_id: sid, cookies }, sid, flags);
+        await callDaemon('cookies.set', { cookies }, sid, flags);
       } catch (err) {
         fail(err, flags);
       }
@@ -50,7 +42,7 @@ export function buildCookiesCmd(g: GF): Command {
   cmd.command('clear <session_id>')
     .action(async (sid: string) => {
       const flags = g();
-      await emit('cookies.clear', { session_id: sid }, sid, flags);
+      await callDaemon('cookies.clear', {}, sid, flags);
     });
 
   return cmd;
@@ -70,14 +62,14 @@ export function buildStorageCmd(g: GF): Command {
   cmd.command('save <session_id> <path>')
     .action(async (sid: string, path: string) => {
       const flags = g();
-      await emit('storage.save', { session_id: sid, path }, sid, flags);
+      await callDaemon('storage.save', { path }, sid, flags);
     });
 
   cmd.command('load <session_id> <path>')
     .description('Note: storage state can only be loaded at session launch — recreate the session instead')
     .action(async (sid: string, path: string) => {
       const flags = g();
-      await emit('storage.load', { session_id: sid, path }, sid, flags);
+      await callDaemon('storage.load', { path }, sid, flags);
     });
 
   return cmd;
@@ -89,25 +81,25 @@ function makeKv(g: GF, name: 'local_storage' | 'session_storage', cmdName: strin
     .option('--page <id>')
     .action(async (sid: string, opts: Record<string, unknown>) => {
       const flags = g();
-      const params: Record<string, unknown> = { session_id: sid };
+      const params: Record<string, unknown> = {};
       if (opts.page) params.page_id = opts.page;
-      await emit(`${name}.get`, params, sid, flags);
+      await callDaemon(`${name}.get`, params, sid, flags);
     });
   cmd.command('set <session_id> <key> <value>')
     .option('--page <id>')
     .action(async (sid: string, key: string, value: string, opts: Record<string, unknown>) => {
       const flags = g();
-      const params: Record<string, unknown> = { session_id: sid, key, value };
+      const params: Record<string, unknown> = { key, value };
       if (opts.page) params.page_id = opts.page;
-      await emit(`${name}.set`, params, sid, flags);
+      await callDaemon(`${name}.set`, params, sid, flags);
     });
   cmd.command('clear <session_id>')
     .option('--page <id>')
     .action(async (sid: string, opts: Record<string, unknown>) => {
       const flags = g();
-      const params: Record<string, unknown> = { session_id: sid };
+      const params: Record<string, unknown> = {};
       if (opts.page) params.page_id = opts.page;
-      await emit(`${name}.clear`, params, sid, flags);
+      await callDaemon(`${name}.clear`, params, sid, flags);
     });
   return cmd;
 }
