@@ -244,8 +244,8 @@ cloak binary install
 
 判断「一个 CLI 是不是好 skill」的三条标准：
 
-1. **agent 读 SKILL.md 一次能跑通**：不需要看源码、不需要试错。当前 P0 那 5 个 bug + P0-2/P0-3 直接破坏这条。
-2. **输出永远不灌爆 context**：大输出默认落盘，agent 收到的是路径而不是 base64。当前默认行为是反的。
-3. **元数据是机器可读、与二进制同源**：`introspect` 而不是 `SKILL.md`，CI 防漂移。当前完全靠手写 markdown。
+1. **agent 读 SKILL.md 一次能跑通**：不需要看源码、不需要试错。✅ P0 阻塞 bug 已全部修复，uid 自动解析和 --out 覆盖已补齐。
+2. **输出永远不灌爆 context**：大输出默认落盘，agent 收到的是路径而不是 base64。⚠️ `--out` 已全命令支持，但默认行为仍是 base64（待实现落盘 + `--inline`）。
+3. **元数据是机器可读、与二进制同源**：`introspect` 而不是 `SKILL.md`，CI 防漂移。⚠️ 仍靠手写 SKILL.md（待实现 `cloak introspect` + CI doc-test）。
 
-把这三条做对，cloakbrowser-cli 就从「一个能用的 CLI」升级为「agent 友好的 skill」。
+已完成的 9 项改造让 cloakbrowser-cli 从「P0 都跑不通」进步到「P1 体验顺畅」。
