@@ -81,16 +81,17 @@ src/
 ├── errors.ts               # CloakError with 19 error codes
 ├── browser.ts              # CloakBrowser loader and launch logic
 ├── commands/               # Command builders (one file per domain)
+│   ├── shared.ts           # callDaemon() wrapper (@name / - resolution)
+│   └── ...                 # session, navigation, content, interaction, etc.
 ├── daemon/                 # Daemon server, protocol, registry
-│   ├── entry.ts            # Daemon process entry point
-│   ├── lifecycle.ts        # Daemon spawn/stop/status
-│   ├── server.ts           # Unix socket server
-│   ├── protocol.ts         # JSON-line RPC wire format
-│   ├── registry.ts         # Session/page registry
+│   ├── entry.ts / lifecycle.ts / server.ts / protocol.ts / registry.ts
 │   └── methods/            # RPC method implementations
-	    ├── params.ts       # Shared optStr/reqStr/optNum/optBool/resolveUid helpers
+│       ├── params.ts       # Shared optStr/reqStr/optNum/optBool/resolveUid
+│       ├── snapshot-helper.ts  # maybeSnapshot() for --snapshot
+│       └── ...             # content, interaction, navigation, etc.
 └── utils/                  # Shared utilities
     ├── paths.ts            # Path constants (~/.cloak)
+    ├── session-resolver.ts # Alias + last-session storage/lookup
     ├── parse.ts            # Input parsers
     └── markdown.ts         # HTML → Markdown conversion
 ```
