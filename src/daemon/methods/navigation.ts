@@ -1,5 +1,6 @@
 import type { MethodCtx, MethodFn } from './index.js';
 import { optStr, reqStr } from './params.js';
+import { maybeSnapshot } from './snapshot-helper.js';
 
 function navOpts(params: Record<string, unknown>): Record<string, unknown> {
   const opts: Record<string, unknown> = {};
@@ -19,33 +20,33 @@ export const navigationMethods: Record<string, MethodFn> = {
       statusText: () => string;
       url: () => string;
     };
-    return {
+    return maybeSnapshot({
       url: ref.page.url(),
       title: await ref.page.title(),
       status: resp ? resp.status() : null,
       status_text: resp ? resp.statusText() : null,
-    };
+    }, ref, params);
   },
 
   'page.back': async (params, ctx: MethodCtx) => {
     const sid = reqStr(params, 'session_id');
     const ref = ctx.registry.requirePage(sid, optStr(params, 'page_id'));
     await ref.page.goBack(navOpts(params));
-    return { url: ref.page.url() };
+    return maybeSnapshot({ url: ref.page.url() }, ref, params);
   },
 
   'page.forward': async (params, ctx: MethodCtx) => {
     const sid = reqStr(params, 'session_id');
     const ref = ctx.registry.requirePage(sid, optStr(params, 'page_id'));
     await ref.page.goForward(navOpts(params));
-    return { url: ref.page.url() };
+    return maybeSnapshot({ url: ref.page.url() }, ref, params);
   },
 
   'page.reload': async (params, ctx: MethodCtx) => {
     const sid = reqStr(params, 'session_id');
     const ref = ctx.registry.requirePage(sid, optStr(params, 'page_id'));
     await ref.page.reload(navOpts(params));
-    return { url: ref.page.url() };
+    return maybeSnapshot({ url: ref.page.url() }, ref, params);
   },
 
   'page.url': (params, ctx: MethodCtx) => {

@@ -11,6 +11,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - **UID auto-resolution** — Interaction commands (`click`, `fill`, `hover`, etc.) now accept bare cloak UIDs (`u7`, `u123`). They are automatically resolved to `[data-cloak-uid="..."]` selectors, eliminating the need for manual selector concatenation. (F1)
 - **`--out` for text and one-shot commands** — The global `--out <path>` flag now works for all text outputs (`content`, `text`, `html`, `markdown`) and one-shot commands (`fetch`, `scrape`). When set, JSON is written to the specified file and a metadata envelope `{path, size, sha256}` is returned. (F2, F3)
+- **Named sessions** — `session new --name login` saves the returned session ID under an alias. All daemon commands now accept `@name` (alias) or `-` (last-used session) instead of a raw session ID. `session alias list/set/remove` commands added for alias management. (P1-P7, P1-P8)
+- **After-action snapshots** — Navigation and interaction commands accept `--snapshot` flag to return a compact DOM snapshot alongside the operation result, saving a round-trip. (P1-P9)
 - **Shared parameter helpers** — `src/daemon/methods/params.ts` provides shared `optStr`, `reqStr`, `optNum`, `optBool`, and `resolveUid` functions, replacing 8+ redundant copies across daemon method files. (F12)
 
 ### Fixed

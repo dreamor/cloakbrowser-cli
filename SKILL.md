@@ -63,11 +63,14 @@ cloak session close $SID
 
 | Command | Description |
 |---------|-------------|
-| `cloak session new [opts]` | Create session, returns `{session_id, page_id}` |
+| `cloak session new [opts]` | Create session, returns `{session_id, page_id}`. Use `--name` to save an alias. |
 | `cloak session list` | List active sessions |
 | `cloak session info <id>` | Session details |
 | `cloak session close <id>` | Close + free resources |
 | `cloak session save-state <id> <path>` | Dump storageState JSON |
+| `cloak session alias list` | List saved aliases |
+| `cloak session alias set <name> <sid>` | Save a named alias |
+| `cloak session alias remove <name>` | Remove a saved alias |
 
 ### Navigation
 
@@ -152,21 +155,25 @@ For binary or large text outputs:
 # 1. Start daemon once per project
 cloak daemon start >/dev/null
 
-# 2. Create session
-SID=$(cloak session new --humanize | jq -r .data.session_id)
+# 2. Create session with a named alias
+cloak session new --humanize --name=target
 
-# 3. Drive it
-cloak goto "$SID" https://target.com
-SNAP=$(cloak snapshot "$SID")
+# 3. Drive it using the alias
+cloak goto @target https://target.com
+SNAP=$(cloak snapshot @target)
 # Agent reasons over $SNAP, picks element uid "u7"
 # UIDs are auto-resolved — you can pass bare "u7" instead of '[data-cloak-uid="u7"]'
-cloak click "$SID" u7
-cloak text "$SID" --selector="#result"
+cloak click @target u7
+cloak text @target --selector="#result"
 
-# 4. Persist state across turns
-cloak session save-state "$SID" ./state.json
+# 4. Or use the last-session shorthand `-`
+cloak goto - https://example.com
+
+# 5. Persist state across turns
+cloak session save-state @target ./state.json
 # Later, in a fresh process:
-SID=$(cloak session new --storage-state=./state.json | jq -r .data.session_id)
+cloak session new --storage-state=./state.json --name=resumed
+cloak goto @resumed https://app.example.com/dashboard
 ```
 
 ## Error Codes

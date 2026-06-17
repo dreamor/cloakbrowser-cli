@@ -1,15 +1,8 @@
 import { Command } from 'commander';
-import { getClient } from '../client.js';
-import { ok, fail, type GlobalFlags } from '../output.js';
+import { callDaemon } from './shared.js';
+import { fail, type GlobalFlags } from '../output.js';
 
 type GF = () => GlobalFlags;
-
-function emit(method: string, params: Record<string, unknown>, sid: string, flags: GlobalFlags): Promise<void> {
-  return getClient().call(method, params).then(
-    (data) => ok(data, flags, { session_id: sid }),
-    (err) => fail(err, flags)
-  );
-}
 
 export function buildWaitCmd(g: GF): Command {
   return new Command('wait').description('Wait for a condition').argument('<session_id>')
@@ -22,7 +15,7 @@ export function buildWaitCmd(g: GF): Command {
     .option('--page <id>')
     .action(async (sid: string, opts: Record<string, unknown>) => {
       const flags = g();
-      const params: Record<string, unknown> = { session_id: sid };
+      const params: Record<string, unknown> = {};
       if (opts.selector) params.selector = opts.selector;
       if (opts.text) params.text = opts.text;
       if (opts.url) params.url = opts.url;
@@ -30,7 +23,7 @@ export function buildWaitCmd(g: GF): Command {
       if (opts.loadState) params.load_state = opts.loadState;
       if (opts.timeout) params.timeout = Number(opts.timeout);
       if (opts.page) params.page_id = opts.page;
-      await emit('page.wait', params, sid, flags);
+      await callDaemon('page.wait', params, sid, flags);
     });
 }
 
@@ -39,9 +32,9 @@ export function buildSleepCmd(g: GF): Command {
     .option('--page <id>')
     .action(async (sid: string, ms: string, opts: Record<string, unknown>) => {
       const flags = g();
-      const params: Record<string, unknown> = { session_id: sid, ms: Number(ms) };
+      const params: Record<string, unknown> = { ms: Number(ms) };
       if (opts.page) params.page_id = opts.page;
-      await emit('page.sleep', params, sid, flags);
+      await callDaemon('page.sleep', params, sid, flags);
     });
 }
 
@@ -50,9 +43,9 @@ export function buildSnapshotCmd(g: GF): Command {
     .option('--page <id>')
     .action(async (sid: string, opts: Record<string, unknown>) => {
       const flags = g();
-      const params: Record<string, unknown> = { session_id: sid };
+      const params: Record<string, unknown> = {};
       if (opts.page) params.page_id = opts.page;
-      await emit('page.snapshot', params, sid, flags);
+      await callDaemon('page.snapshot', params, sid, flags);
     });
 }
 
@@ -61,9 +54,9 @@ export function buildFramesCmd(g: GF): Command {
     .option('--page <id>')
     .action(async (sid: string, opts: Record<string, unknown>) => {
       const flags = g();
-      const params: Record<string, unknown> = { session_id: sid };
+      const params: Record<string, unknown> = {};
       if (opts.page) params.page_id = opts.page;
-      await emit('page.frames', params, sid, flags);
+      await callDaemon('page.frames', params, sid, flags);
     });
 }
 
@@ -72,9 +65,9 @@ export function buildA11yCmd(g: GF): Command {
     .option('--page <id>')
     .action(async (sid: string, opts: Record<string, unknown>) => {
       const flags = g();
-      const params: Record<string, unknown> = { session_id: sid };
+      const params: Record<string, unknown> = {};
       if (opts.page) params.page_id = opts.page;
-      await emit('page.accessibility', params, sid, flags);
+      await callDaemon('page.accessibility', params, sid, flags);
     });
 }
 
@@ -88,7 +81,7 @@ export function buildRequestCmd(g: GF): Command {
     .option('--timeout <ms>')
     .action(async (sid: string, url: string, opts: Record<string, unknown>) => {
       const flags = g();
-      const params: Record<string, unknown> = { session_id: sid, url };
+      const params: Record<string, unknown> = { url };
       if (opts.method) params.method = opts.method;
       if (Array.isArray(opts.header) && opts.header.length) {
         const h: Record<string, string> = {};
@@ -116,7 +109,7 @@ export function buildRequestCmd(g: GF): Command {
         params.form = f;
       }
       if (opts.timeout) params.timeout = Number(opts.timeout);
-      await emit('network.request', params, sid, flags);
+      await callDaemon('network.request', params, sid, flags);
     });
 }
 
@@ -127,10 +120,10 @@ export function buildDialogCmd(g: GF): Command {
     .option('--page <id>')
     .action(async (sid: string, opts: Record<string, unknown>) => {
       const flags = g();
-      const params: Record<string, unknown> = { session_id: sid, action: opts.action };
+      const params: Record<string, unknown> = { action: opts.action };
       if (opts.text) params.text = opts.text;
       if (opts.page) params.page_id = opts.page;
-      await emit('dialog.handle_next', params, sid, flags);
+      await callDaemon('dialog.handle_next', params, sid, flags);
     });
 }
 

@@ -1,24 +1,17 @@
 import { Command } from 'commander';
-import { getClient } from '../client.js';
-import { ok, fail, type GlobalFlags } from '../output.js';
+import { callDaemon } from './shared.js';
+import { type GlobalFlags } from '../output.js';
 
 type GF = () => GlobalFlags;
-
-function emit(method: string, params: Record<string, unknown>, sid: string, flags: GlobalFlags): Promise<void> {
-  return getClient().call(method, params).then(
-    (data) => ok(data, flags, { session_id: sid }),
-    (err) => fail(err, flags)
-  );
-}
 
 export function buildContentCmd(g: GF): Command {
   return new Command('content').description('Get full page HTML').argument('<session_id>')
     .option('--page <id>')
     .action(async (sid: string, opts: Record<string, unknown>) => {
       const flags = g();
-      const params: Record<string, unknown> = { session_id: sid };
+      const params: Record<string, unknown> = {};
       if (opts.page) params.page_id = opts.page;
-      await emit('page.content', params, sid, flags);
+      await callDaemon('page.content', params, sid, flags);
     });
 }
 
@@ -28,10 +21,10 @@ export function buildTextCmd(g: GF): Command {
     .option('--page <id>')
     .action(async (sid: string, opts: Record<string, unknown>) => {
       const flags = g();
-      const params: Record<string, unknown> = { session_id: sid };
+      const params: Record<string, unknown> = {};
       if (opts.selector) params.selector = opts.selector;
       if (opts.page) params.page_id = opts.page;
-      await emit('page.text', params, sid, flags);
+      await callDaemon('page.text', params, sid, flags);
     });
 }
 
@@ -41,7 +34,7 @@ export function buildHtmlCmd(g: GF): Command {
     .option('--page <id>')
     .action(async (sid: string, opts: Record<string, unknown>) => {
       const flags = g();
-      await emit('page.html', { session_id: sid, selector: opts.selector, ...(opts.page ? { page_id: opts.page } : {}) }, sid, flags);
+      await callDaemon('page.html', { selector: opts.selector, ...(opts.page ? { page_id: opts.page } : {}) }, sid, flags);
     });
 }
 
@@ -50,7 +43,7 @@ export function buildAttrCmd(g: GF): Command {
     .option('--page <id>')
     .action(async (sid: string, selector: string, name: string, opts: Record<string, unknown>) => {
       const flags = g();
-      await emit('page.attr', { session_id: sid, selector, name, ...(opts.page ? { page_id: opts.page } : {}) }, sid, flags);
+      await callDaemon('page.attr', { selector, name, ...(opts.page ? { page_id: opts.page } : {}) }, sid, flags);
     });
 }
 
@@ -59,9 +52,9 @@ export function buildMarkdownCmd(g: GF): Command {
     .option('--page <id>')
     .action(async (sid: string, opts: Record<string, unknown>) => {
       const flags = g();
-      const params: Record<string, unknown> = { session_id: sid };
+      const params: Record<string, unknown> = {};
       if (opts.page) params.page_id = opts.page;
-      await emit('page.markdown', params, sid, flags);
+      await callDaemon('page.markdown', params, sid, flags);
     });
 }
 
@@ -75,7 +68,7 @@ export function buildScreenshotCmd(g: GF): Command {
     .option('--page <id>')
     .action(async (sid: string, opts: Record<string, unknown>) => {
       const flags = g();
-      const params: Record<string, unknown> = { session_id: sid };
+      const params: Record<string, unknown> = {};
       // --path takes precedence; fall back to global --out
       const outPath = (opts.path as string) || flags.out;
       if (outPath) params.path = outPath;
@@ -84,7 +77,7 @@ export function buildScreenshotCmd(g: GF): Command {
       if (opts.format) params.format = opts.format;
       if (opts.quality) params.quality = Number(opts.quality);
       if (opts.page) params.page_id = opts.page;
-      await emit('page.screenshot', params, sid, flags);
+      await callDaemon('page.screenshot', params, sid, flags);
     });
 }
 
@@ -96,13 +89,13 @@ export function buildPdfCmd(g: GF): Command {
     .option('--page <id>')
     .action(async (sid: string, opts: Record<string, unknown>) => {
       const flags = g();
-      const params: Record<string, unknown> = { session_id: sid };
+      const params: Record<string, unknown> = {};
       // --path takes precedence; fall back to global --out
       const outPath = (opts.path as string) || flags.out;
       if (outPath) params.path = outPath;
       if (opts.format) params.format = opts.format;
       if (opts.landscape) params.landscape = true;
       if (opts.page) params.page_id = opts.page;
-      await emit('page.pdf', params, sid, flags);
+      await callDaemon('page.pdf', params, sid, flags);
     });
 }
