@@ -1,6 +1,6 @@
 import type { MethodCtx, MethodFn } from './index.js';
 import { CloakError } from '../../errors.js';
-import { optStr, optNum, reqStr } from './params.js';
+import { optStr, optNum, reqStr, WAIT_STABLE_SCRIPT } from './params.js';
 
 export const waitMethods: Record<string, MethodFn> = {
   'page.wait': async (params, ctx: MethodCtx) => {
@@ -12,6 +12,16 @@ export const waitMethods: Record<string, MethodFn> = {
     const urlPat = optStr(params, 'url');
     const loadState = optStr(params, 'load_state');
     const state = optStr(params, 'state');
+    const stable = params.stable === true;
+
+    if (stable) {
+      const quietMs = typeof params.quiet_ms === 'number' ? params.quiet_ms : 500;
+      const opts: Record<string, unknown> = {};
+      if (timeout !== undefined) opts.timeout = timeout;
+      const jsHandle = await ref.page.waitForFunction(WAIT_STABLE_SCRIPT, quietMs, opts) as { jsonValue: () => Promise<Record<string, unknown>> };
+      const value = await jsHandle.jsonValue();
+      return { waited: 'stable', result: value };
+    }
 
     if (selector) {
       const opts: Record<string, unknown> = {};

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { optStr, reqStr, optNum, optBool, resolveUid, filterSnapshot, SNAPSHOT_IFRAME_SCRIPT, type SnapshotItem } from '../../src/daemon/methods/params.js';
+import { optStr, reqStr, optNum, optBool, resolveUid, filterSnapshot, SNAPSHOT_IFRAME_SCRIPT, WAIT_STABLE_SCRIPT, type SnapshotItem } from '../../src/daemon/methods/params.js';
 
 describe('optStr', () => {
   it('returns value for string key', () => {
@@ -279,5 +279,13 @@ describe('SNAPSHOT_IFRAME_SCRIPT', () => {
 
   it('contains querySelectorAll for iframe traversal', () => {
     expect(SNAPSHOT_IFRAME_SCRIPT).toContain('iframe');
+  });
+});
+
+describe('WAIT_STABLE_SCRIPT', () => {
+  it('is a non-empty string with MutationObserver', () => {
+    expect(typeof WAIT_STABLE_SCRIPT).toBe('string');
+    expect(WAIT_STABLE_SCRIPT.length).toBeGreaterThan(0);
+    expect(WAIT_STABLE_SCRIPT).toContain('MutationObserver');
   });
 });
