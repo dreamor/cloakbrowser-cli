@@ -52,7 +52,7 @@ export const waitMethods: Record<string, MethodFn> = {
       await ref.page.waitForLoadState(loadState, opts);
       return { waited: 'load_state', state: loadState };
     }
-    throw new CloakError('INVALID_ARG', 'wait requires one of: selector, text, url, load_state');
+    throw new CloakError('INVALID_ARG', 'wait requires one of: selector, text, url, load_state, stable');
   },
 
   'page.sleep': async (params, ctx: MethodCtx) => {
