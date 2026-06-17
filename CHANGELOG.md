@@ -9,6 +9,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+### Fixed
+
+### Changed
+
+## [0.3.0] - 2026-06-17
+
+### Added
+
 - **UID auto-resolution** — Interaction commands (`click`, `fill`, `hover`, etc.) now accept bare cloak UIDs (`u7`, `u123`). They are automatically resolved to `[data-cloak-uid="..."]` selectors, eliminating the need for manual selector concatenation. (F1)
 - **`--out` for text and one-shot commands** — The global `--out <path>` flag now works for all text outputs (`content`, `text`, `html`, `markdown`) and one-shot commands (`fetch`, `scrape`). When set, JSON is written to the specified file and a metadata envelope `{path, size, sha256}` is returned. (F2, F3)
 - **Named sessions** — `session new --name login` saves the returned session ID under an alias. All daemon commands now accept `@name` (alias) or `-` (last-used session) instead of a raw session ID. `session alias list/set/remove` commands added for alias management. (P1-P7, P1-P8)
