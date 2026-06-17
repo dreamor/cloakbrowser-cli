@@ -64,7 +64,8 @@ SID=$(cloak session new --humanize | jq -r .data.session_id)
 cloak goto "$SID" https://target.com
 SNAP=$(cloak snapshot "$SID")              # element uids, roles, names, bboxes
 # agent reasons over $SNAP, picks an element with uid "u7"
-cloak click "$SID" '[data-cloak-uid="u7"]'
+# UIDs are auto-resolved — you can pass bare "u7" instead of a full selector
+cloak click "$SID" u7
 cloak text "$SID" --selector="#result"
 
 # 4. Or keep state across turns by saving cookies + localStorage.
@@ -123,6 +124,8 @@ All accept `--page <pid>` and `--timeout <ms>`. `goto` also takes `--wait-until=
 `content` (HTML) · `text` (innerText, `--selector` to scope) · `html --selector` · `attr <sel> <name>` · `markdown` (Readability + Turndown) · `screenshot [--path] [--full-page] [--selector] [--format png|jpeg] [--quality]` · `pdf [--path] [--format A4] [--landscape]`
 
 Binary outputs are returned as base64 by default; pass `--path=FILE` to write to disk (response includes `{path, size, sha256}`). The global `--out <path>` flag also works as a fallback for `--path`.
+
+Text outputs (`content`, `text`, `html`, `markdown`) and one-shot commands (`fetch`, `scrape`) also respect `--out <path>`: when set, the JSON is written to the file and a metadata envelope `{ok, data: {path, size, sha256}}` is returned instead.
 
 ### Interaction (all use humanize when session was started with `--humanize`)
 `click` · `dblclick` · `fill` · `type` · `press` · `hover` · `focus` · `blur` · `scroll [--to top|bottom|<sel>] [-x] [-y]` · `select <sid> <sel> <value...>` · `check` · `uncheck` · `upload <sid> <sel> <file...>` · `drag <sid> <from> <to>` · `dispatch <sid> <sel> <event_type> [--init <json>]`

@@ -216,26 +216,24 @@ cloak binary install
 
 ## 落地清单（建议 Issue 拆分）
 
-### 第一波（一周内）— P0
-- [ ] #BUG-1 修 `a11y` 命令（page.accessibility API 适配）
-- [ ] #BUG-2 修 `page new`（browser.newContext 调用路径）
-- [ ] #BUG-3 修 `--out` 在 daemon 路径
-- [ ] #BUG-4 修 `fingerprint` 子命令注册
-- [ ] 交互命令自动识别 `u\d+` uid 形式
+### 已完成（2026-06-17）
+- [x] F1: 交互命令自动识别 `u\d+` uid 形式
+- [x] F2: One-shot 模式补齐 `--out`
+- [x] F3: 文本命令补齐 `--out`
+- [x] F4: `--version` 从 `package.json` 读取
+- [x] F5: `oneShotFetch` re-throw 修复
+- [x] F12: optStr/reqStr 去重
 
-### 第二波（两周内）— P1
+### 待完成
 - [ ] 大输出默认落盘 + `--inline` opt-in
 - [ ] 自动启动 daemon + idle shutdown
 - [ ] Named sessions `--name=` / `@name` / `-` last-session
 - [ ] 交互命令 `--snapshot` 后置快照
-
-### 第三波（一个月内）— P2 / P3
 - [ ] `cloak introspect` 输出 JSON Schema
 - [ ] 结构化错误（hint / kind / recoverable / suggestions）
 - [ ] SKILL.md 拆分 + recipes/ 目录
 - [ ] CI doc-as-test
 - [ ] per-cwd daemon namespace
-- [ ] session TTL
 - [ ] `--allow-eval` / `--proxy-file`
 - [ ] 依赖收敛 + doctor 输出可粘贴修复指令
 

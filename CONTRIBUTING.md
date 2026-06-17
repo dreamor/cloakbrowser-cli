@@ -88,6 +88,7 @@ src/
 │   ├── protocol.ts         # JSON-line RPC wire format
 │   ├── registry.ts         # Session/page registry
 │   └── methods/            # RPC method implementations
+	    ├── params.ts       # Shared optStr/reqStr/optNum/optBool/resolveUid helpers
 └── utils/                  # Shared utilities
     ├── paths.ts            # Path constants (~/.cloak)
     ├── parse.ts            # Input parsers
