@@ -61,8 +61,9 @@ import { buildBatchCmd } from './commands/batch.js';
 import { buildDoctorCmd, buildTestCmd, buildVersionCmd } from './commands/doctor.js';
 import { buildFingerprintCmd } from './commands/fingerprint.js';
 
-import { version as packageVersion } from '../package.json';
-const CLI_VERSION = packageVersion;
+import { createRequire } from 'module';
+const _require = createRequire(import.meta.url);
+const { version: CLI_VERSION } = _require('../package.json') as { version: string };
 
 export async function main(argv: string[]): Promise<void> {
   ensureRoot();
