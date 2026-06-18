@@ -5,6 +5,22 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.4.1] - 2026-06-18
+
+### Security
+
+- **SafePath path validation** — New `SafePath` module prevents directory traversal attacks on file read/write operations. All file operations validate that resolved paths stay within allowed base directories. (S1)
+- **Socket/permission hardening** — Unix domain socket set to `0600` and session directory to `0700` to prevent local privilege escalation. (S2)
+- **Path validation enforcement** — File read/write operations now enforce SafePath traversal checks before any I/O. (S3)
+- **Dialog timeout** — `dialog.handle_next` adds a configurable timeout (default 30s) to prevent resource leaks from abandoned dialogs. (S4)
+- **Parameterized evaluate** — `oneShotScrape` and daemon `eval` method use parameterized `evaluate` instead of string concatenation, preventing JS injection via dynamic expressions. (S5)
+
+### CI
+
+- **NPM_TOKEN** — `release.yml` now uses `secrets.NPM_TOKEN` for npm publish authentication.
+- **E2E build** — E2E CI job now runs `npm run build` before tests (jobs don't share workspace).
+- **Node 22 compatibility** — Fixed JSON import in `cli.ts` to use `createRequire` for Node 22 ESM compatibility.
+
 ## [0.4.0] - 2026-06-17
 
 ### Added
