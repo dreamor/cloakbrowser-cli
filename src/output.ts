@@ -2,6 +2,7 @@ import { writeFileSync } from 'node:fs';
 import { createHash } from 'node:crypto';
 import chalk from 'chalk';
 import { CloakError, fromUnknown } from './errors.js';
+import { validateWritePath } from './utils/safepath.js';
 
 export type GlobalFlags = {
   pretty: boolean;
@@ -59,9 +60,10 @@ export function fail(err: unknown, flags: GlobalFlags): never {
 }
 
 export function writeBinaryOut(buf: Buffer, path: string): { path: string; size: number; sha256: string } {
-  writeFileSync(path, buf);
+  const safePath = validateWritePath(path);
+  writeFileSync(safePath, buf);
   return {
-    path,
+    path: safePath,
     size: buf.length,
     sha256: createHash('sha256').update(buf).digest('hex'),
   };
