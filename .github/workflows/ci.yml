@@ -70,6 +70,7 @@ jobs:
           node-version: 22
           cache: npm
       - run: npm ci
+      - run: npm run build
       - name: Install CloakBrowser binary
         run: npx cloakbrowser install || echo "::warning::CloakBrowser binary install skipped"
       - name: Install Playwright browsers

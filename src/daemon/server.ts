@@ -1,5 +1,5 @@
-import { createServer, type Server, type Socket } from 'node:net';
-import { existsSync, unlinkSync, writeFileSync, readFileSync } from 'node:fs';
+import { createServer, createConnection, type Server, type Socket } from 'node:net';
+import { existsSync, unlinkSync, writeFileSync, readFileSync, chmodSync } from 'node:fs';
 import { paths, ensureRoot } from '../utils/paths.js';
 import { Registry } from './registry.js';
 import { send, readLines, makeError, makeOk, type RpcRequest, type RpcResponse } from './protocol.js';
@@ -16,10 +16,37 @@ export type DaemonServer = {
 
 const startedAt = Date.now();
 
+/**
+ * Probe whether a Unix socket is actually listening.
+ * Resolves `true` if a connection succeeds, `false` if ECONNREFUSED or timeout.
+ */
+function isSocketAlive(sockPath: string, timeoutMs = 1000): Promise<boolean> {
+  return new Promise((resolve) => {
+    const sock = createConnection(sockPath, () => {
+      sock.end();
+      resolve(true);
+    });
+    sock.on('error', () => resolve(false));
+    const timer = setTimeout(() => {
+      sock.destroy();
+      resolve(false);
+    }, timeoutMs);
+    timer.unref?.();
+  });
+}
+
 export async function startServer(): Promise<DaemonServer> {
   ensureRoot();
   if (existsSync(paths.sock)) {
-    // stale socket — verify by trying to connect; if ECONNREFUSED, remove
+    // Verify the existing socket is still alive before removing
+    const alive = await isSocketAlive(paths.sock);
+    if (alive) {
+      throw new CloakError(
+        'DAEMON_ALREADY_RUNNING',
+        'Another daemon is already listening on the socket',
+      );
+    }
+    // Stale socket — safe to remove
     try {
       unlinkSync(paths.sock);
     } catch {
@@ -39,6 +66,9 @@ export async function startServer(): Promise<DaemonServer> {
       resolve();
     });
   });
+
+  // Restrict socket to owner-only access (0600)
+  try { chmodSync(paths.sock, 0o600); } catch { /* best-effort */ }
 
   writeFileSync(paths.pid, String(process.pid));
 

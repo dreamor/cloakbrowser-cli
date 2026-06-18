@@ -2,6 +2,7 @@ import { readFileSync } from 'node:fs';
 import type { MethodCtx, MethodFn } from './index.js';
 import { CloakError } from '../../errors.js';
 import { optStr, reqStr } from './params.js';
+import { validateReadPath } from '../../utils/safepath.js';
 
 export const evalMethods: Record<string, MethodFn> = {
   'page.eval': async (params, ctx: MethodCtx) => {
@@ -19,11 +20,12 @@ export const evalMethods: Record<string, MethodFn> = {
 
   'page.eval_file': async (params, ctx: MethodCtx) => {
     const sid = reqStr(params, 'session_id');
-    const path = reqStr(params, 'path');
+    const rawPath = reqStr(params, 'path');
+    const safePath = validateReadPath(rawPath);
     const ref = ctx.registry.requirePage(sid, optStr(params, 'page_id'));
-    const code = readFileSync(path, 'utf8');
+    const code = readFileSync(safePath, 'utf8');
     const v = await ref.page.evaluate(code, params.arg);
-    return { value: serialize(v), path };
+    return { value: serialize(v), path: safePath };
   },
 };
 

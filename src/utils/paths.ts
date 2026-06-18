@@ -1,6 +1,6 @@
 import { homedir, tmpdir } from 'node:os';
 import { join } from 'node:path';
-import { mkdirSync } from 'node:fs';
+import { mkdirSync, chmodSync } from 'node:fs';
 
 const ROOT = process.env.CLOAK_CLI_HOME ?? join(homedir(), '.cloak');
 
@@ -14,7 +14,8 @@ export const paths = {
 } as const;
 
 export function ensureRoot(): void {
-  mkdirSync(paths.root, { recursive: true });
-  mkdirSync(paths.sessions, { recursive: true });
+  mkdirSync(paths.root, { recursive: true, mode: 0o700 });
+  try { chmodSync(paths.root, 0o700); } catch { /* best-effort */ }
+  mkdirSync(paths.sessions, { recursive: true, mode: 0o700 });
   mkdirSync(paths.tmp, { recursive: true });
 }

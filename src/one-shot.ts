@@ -110,20 +110,17 @@ export async function oneShotScrape(url: string, opts: ScrapeOpts): Promise<Scra
     await page.goto(url, gotoOpts);
 
     const extracted = (await page.evaluate(
-      // eslint-disable-next-line @typescript-eslint/no-implied-eval
-      `(() => {
-        const sel = ${JSON.stringify(opts.selector)};
-        const multi = ${JSON.stringify(Boolean(opts.multi))};
-        const attr = ${JSON.stringify(opts.attr ?? null)};
-        const els = multi
-          ? Array.from(document.querySelectorAll(sel))
-          : [document.querySelector(sel)].filter(Boolean);
+      `((args) => {
+        const els = args.multi
+          ? Array.from(document.querySelectorAll(args.sel))
+          : [document.querySelector(args.sel)].filter(Boolean);
         return els.map((el) => ({
           text: (el.innerText || el.textContent || '').trim(),
           html: el.outerHTML,
-          attr: attr ? el.getAttribute(attr) : null,
+          attr: args.attr ? el.getAttribute(args.attr) : null,
         }));
-      })()`
+      })`,
+      { sel: opts.selector, multi: Boolean(opts.multi), attr: opts.attr ?? null }
     )) as Array<{ text: string; html: string; attr: string | null }>;
 
     return {
