@@ -1,7 +1,7 @@
 # CloakBrowser CLI 安全审查报告
 
 **项目**: `@dreamor/cloakbrowser-cli`  
-**版本**: 0.4.0  
+**版本**: 0.4.1  
 **审查日期**: 2026-06-17  
 **审查范围**: 全量源代码（47 个 TypeScript 文件 + 1 个入口 JS + 2 个 CI/CD YAML）  
 **审查人**: 安全审查 Agent  

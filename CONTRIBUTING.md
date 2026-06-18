@@ -91,6 +91,7 @@ src/
 │       └── ...             # content, interaction, navigation, etc.
 └── utils/                  # Shared utilities
     ├── paths.ts            # Path constants (~/.cloak)
+    ├── safepath.ts         # SafePath traversal-prevention validation
     ├── session-resolver.ts # Alias + last-session storage/lookup
     ├── parse.ts            # Input parsers
     └── markdown.ts         # HTML → Markdown conversion
