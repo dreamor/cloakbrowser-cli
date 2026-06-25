@@ -93,7 +93,7 @@ export function resolveLaunchOpts(opts: LaunchOpts): ResolvedLaunchOpts {
   if (opts.channel) launchOptions.channel = opts.channel;
   // Proxy credential routing (URL-encoded special chars in passwords,
   // inline --proxy-server bypass for HTTP-on-supported-platforms) is
-  // handled transparently by cloakbrowser >= 0.3.31 inside launch().
+  // handled transparently by cloakbrowser >= 0.4.0 inside launch().
   if (opts.proxy) launchOptions.proxy = opts.proxy;
   if (opts.geoip !== undefined) launchOptions.geoip = opts.geoip;
   if (opts.humanize !== undefined) launchOptions.humanize = opts.humanize;

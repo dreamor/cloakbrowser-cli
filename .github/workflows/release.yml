@@ -40,6 +40,8 @@ jobs:
     permissions:
       id-token: write
       contents: read
+    outputs:
+      published_version: ${{ steps.resolve-version.outputs.RESOLVED_VERSION }}
     steps:
       - uses: actions/checkout@v5
       - uses: actions/setup-node@v5
@@ -49,6 +51,29 @@ jobs:
           package-manager-cache: false
       - run: node --version && npm --version
       - run: npm ci
+      - name: Resolve version (bump if already published)
+        id: resolve-version
+        run: |
+          TAG_VERSION="${GITHUB_REF#refs/tags/v}"
+          VERSION="${TAG_VERSION}"
+
+          while npm view "@dreamor/cloakbrowser-cli@${VERSION}" version >/dev/null 2>&1; do
+            echo "⚠️ Version ${VERSION} already published on npm, bumping patch..."
+            VERSION=$(node -e "
+              const p = '${VERSION}'.split('.');
+              const patch = parseInt(p[2] || '0', 10);
+              console.log(p[0] + '.' + p[1] + '.' + (patch + 1));
+            ")
+          done
+
+          if [ "$VERSION" != "$TAG_VERSION" ]; then
+            echo "📋 Auto-bumped: ${TAG_VERSION} → ${VERSION}"
+            npm version "$VERSION" --no-git-tag-version
+          else
+            echo "✅ Version ${VERSION} is available, no bump needed"
+          fi
+
+          echo "RESOLVED_VERSION=${VERSION}" >> "$GITHUB_OUTPUT"
       - run: npm run build
       - run: npm publish --access public --provenance
         env:
@@ -57,15 +82,19 @@ jobs:
   github-release:
     name: Create GitHub Release
     runs-on: ubuntu-latest
-    needs: [validate]
+    needs: [validate, publish-npm]
     permissions:
       contents: write
       id-token: write
     steps:
       - uses: actions/checkout@v5
-      - name: Extract version from tag
+      - name: Extract version
         id: version
-        run: echo "VERSION=${GITHUB_REF#refs/tags/v}" >> "$GITHUB_OUTPUT"
+        run: |
+          PUBLISHED="${{ needs.publish-npm.outputs.published_version }}"
+          TAG_VERSION="${GITHUB_REF#refs/tags/v}"
+          VERSION="${PUBLISHED:-$TAG_VERSION}"
+          echo "VERSION=${VERSION}" >> "$GITHUB_OUTPUT"
       - name: Extract changelog
         id: changelog
         run: |

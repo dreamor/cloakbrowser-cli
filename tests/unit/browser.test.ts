@@ -30,7 +30,7 @@ describe('CloakModule type (compile-time contract)', () => {
     expect(typeof mod.humanizeBrowser).toBe('function');
   });
 
-  it('accepts a v0.3.0 module shape WITHOUT the new fields (backward compat)', () => {
+  it('accepts a v0.3.x module shape WITHOUT the new fields (backward compat)', () => {
     // Old modules don't expose buildLaunchOptions etc. — must be optional.
     const mod = {
       launch: vi.fn(),

@@ -130,7 +130,7 @@ export async function launchFromResolved(resolved: ResolvedLaunchOpts): Promise<
     if (!cb.launchPersistentContext) {
       throw new CloakError(
         'MISSING_DEPENDENCY',
-        "Installed cloakbrowser does not expose launchPersistentContext (need >= 0.3.0)"
+        "Installed cloakbrowser does not expose launchPersistentContext (need >= 0.4.0)"
       );
     }
     const ctx = await cb.launchPersistentContext(resolved.persistentDir, resolved.launchOptions);
