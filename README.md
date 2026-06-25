@@ -53,7 +53,7 @@ The daemon keeps `Browser`, `Context`, and `Page` instances alive between CLI in
 npm install -g @dreamor/cloakbrowser-cli cloakbrowser playwright-core
 ```
 
-Requires Node 20.0+. Peer deps `cloakbrowser` and `playwright-core` are installed alongside.
+Requires Node 20.0+. Peer deps `cloakbrowser` (≥ 0.3.0, 0.4.3+ recommended) and `playwright-core` (≥ 1.53.0) are installed alongside. Optional peers `mmdb-lib` and `socks-proxy-agent` enable Pro GeoIP and SOCKS proxy features.
 
 First real browser launch downloads the stealth Chromium binary (~200MB, cached at `~/.cloakbrowser/`). Pre-download with `cloak binary install`.
 
@@ -108,7 +108,7 @@ Error `code` values: `BOOT_ERROR`, `INVALID_ARG`, `INVALID_JSON`, `MISSING_DEPEN
 | `cloak daemon stop` | Stop and free all sessions. |
 | `cloak daemon status` | pid, uptime, session count. |
 | `cloak daemon ping` | Round-trip health check. |
-| `cloak daemon methods` | List all 54 RPC methods. |
+| `cloak daemon methods` | List all 62 RPC methods. |
 | `cloak daemon foreground` | Run daemon attached for debugging. |
 
 ### Sessions
@@ -293,7 +293,7 @@ cloak goto "$SID" https://example.com
        (one-shot fetch/scrape: in-process, no daemon)
 ```
 
-- 54 RPC methods on the daemon, all listed by `cloak daemon methods`.
+- 62 RPC methods on the daemon, all listed by `cloak daemon methods`.
 - One-shot mode (`fetch`, `scrape`) skips the daemon entirely for stateless requests.
 - Session idle timeout: 1 hour by default; override with `--ttl-ms` on `session new`.
 - Daemon RPC timeout: 30s default (configurable per-command via `--timeout`).

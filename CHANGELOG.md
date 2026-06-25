@@ -13,6 +13,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **cloakbrowser devDependency** — Updated to `>=0.4.3` for development/testing against latest upstream.
 - **New optional peers** — Added `mmdb-lib >=2.0.0` and `socks-proxy-agent >=10.0.0` as optional peerDependencies for cloakbrowser Pro GeoIP and SOCKS proxy features.
 - **Version hints** — Updated inline version hints in `browser.ts` and `options.ts` to reflect 0.4.x baseline.
+- **Docs** — Updated CONTRIBUTING.md, SKILL.md, README.md with current dependency versions and RPC method count (54→62).
 
 ## [0.4.1] - 2026-06-18
 

@@ -11,7 +11,7 @@
 - **Package Manager**: npm
 - **npm Package**: `@dreamor/cloakbrowser-cli`
 - **Category**: web / browser-automation
-- **Requires**: Node.js >= 20, cloakbrowser >= 0.3.0, playwright-core >= 1.40.0
+- **Requires**: Node.js >= 20, cloakbrowser >= 0.3.0 (0.4.3+ recommended), playwright-core >= 1.53.0
 - **Homepage**: https://github.com/dreamor/cloakbrowser-cli
 - **Source**: https://github.com/dreamor/cloakbrowser-cli
 
@@ -57,7 +57,7 @@ cloak session close @demo
 | `cloak daemon stop` | Stop and free all sessions |
 | `cloak daemon status` | Show pid, uptime, session count |
 | `cloak daemon ping` | Round-trip health check |
-| `cloak daemon methods` | List all 54 RPC methods |
+| `cloak daemon methods` | List all 62 RPC methods |
 
 ### Sessions
 
