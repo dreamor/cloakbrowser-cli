@@ -198,6 +198,7 @@ Every CloakBrowser launch flag is exposed:
 - **Humanize**: `--humanize`, `--humanize-preset careful|default|fast`, `--humanize-config <json>`
 - **Context-level**: `--storage-state <path>`, `--extra-headers <json>`, `--permissions <json>`, `--extension <path>` (repeatable)
 - **Misc**: `--extra-args <json>` (extra Chromium args), `--slow-mo <ms>`, `--timeout <ms>`
+- **Pro**: `--license-key <key>` (or `CLOAKBROWSER_LICENSE_KEY` env), `--browser-version <version>` (pin Chromium build, e.g. `148.0.7778.215.5`)
 
 Context-level options or `--persistent` cause `cloak` to use `launchContext` / `launchPersistentContext` automatically.
 
@@ -279,6 +280,7 @@ cloak goto "$SID" https://example.com
 | `CLOAK_BATCH_MAX_BYTES` | No | Max batch stdin bytes | `1000000` (1 MB) |
 | `CLOAK_BATCH_MAX_LINES` | No | Max batch stdin lines | `200` |
 | `PYTHON` | No | Python interpreter for `cloak serve` | `python3` |
+| `CLOAKBROWSER_LICENSE_KEY` | No | CloakBrowser Pro license key (or use `--license-key`) | `sk-xxxx` |
 
 ## Architecture
 
