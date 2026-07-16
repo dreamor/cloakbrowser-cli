@@ -11,7 +11,7 @@
 - **Package Manager**: npm
 - **npm Package**: `@dreamor/cloakbrowser-cli`
 - **Category**: web / browser-automation
-- **Requires**: Node.js >= 20, cloakbrowser >= 0.3.0 (0.4.3+ recommended), playwright-core >= 1.53.0
+- **Requires**: Node.js >= 20, cloakbrowser >= 0.3.0 (0.4.10+ recommended), playwright-core >= 1.53.0
 - **Homepage**: https://github.com/dreamor/cloakbrowser-cli
 - **Source**: https://github.com/dreamor/cloakbrowser-cli
 
@@ -127,6 +127,7 @@ All CloakBrowser launch flags are exposed:
 - **Humanize**: `--humanize`, `--humanize-preset careful|default|fast`, `--humanize-config <json>`
 - **Context**: `--storage-state <path>`, `--extra-headers <json>`, `--permissions <json>`, `--extension <path>`
 - **Misc**: `--extra-args <json>`, `--slow-mo <ms>`, `--timeout <ms>`
+- **Pro**: `--license-key <key>` (or env `CLOAKBROWSER_LICENSE_KEY`), `--browser-version <version>` (pin Chromium build)
 
 ## Output Format
 

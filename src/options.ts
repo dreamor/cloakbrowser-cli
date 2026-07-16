@@ -46,6 +46,10 @@ export type LaunchOpts = {
   extensions?: string[];
   extraArgs?: string;
 
+  // Pro
+  licenseKey?: string;
+  browserVersion?: string;
+
   // Misc
   slowMo?: string;
   timeout?: string;
@@ -101,6 +105,8 @@ export function resolveLaunchOpts(opts: LaunchOpts): ResolvedLaunchOpts {
   if (opts.humanizeConfig) {
     launchOptions.humanConfig = parseJsonArg(opts.humanizeConfig, 'humanize-config');
   }
+  if (opts.licenseKey) launchOptions.licenseKey = opts.licenseKey;
+  if (opts.browserVersion) launchOptions.browserVersion = opts.browserVersion;
 
   const viewport = parseViewport(opts.viewport);
   if (viewport) launchOptions.viewport = viewport;
@@ -175,6 +181,8 @@ export const LAUNCH_OPTION_DEFS: readonly CliOptionDef[] = [
   { flags: '--humanize', description: 'Enable human-like mouse/keyboard/scroll behavior' },
   { flags: '--humanize-preset <name>', description: 'Humanize preset (careful|default|fast)' },
   { flags: '--humanize-config <json>', description: 'Custom humanize config as JSON' },
+  { flags: '--license-key <key>', description: 'CloakBrowser Pro license key (env: CLOAKBROWSER_LICENSE_KEY)' },
+  { flags: '--browser-version <version>', description: 'Pin to a specific Chromium build (e.g. 148.0.7778.215.5)' },
   { flags: '--fingerprint <seed>', description: 'Deterministic fingerprint seed' },
   { flags: '--timezone <id>', description: 'Timezone (e.g. America/New_York)' },
   { flags: '--locale <id>', description: 'Locale (e.g. en-US)' },
@@ -242,6 +250,8 @@ export function pickLaunchOpts(o: Record<string, unknown>): LaunchOpts {
     humanize: get<boolean>('humanize'),
     humanizePreset: get<string>('humanizePreset'),
     humanizeConfig: get<string>('humanizeConfig'),
+    licenseKey: get<string>('licenseKey'),
+    browserVersion: get<string>('browserVersion'),
     storageState: get<string>('storageState'),
     extraHeaders: get<string>('extraHeaders'),
     permissions: get<string>('permissions'),

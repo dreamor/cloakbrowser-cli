@@ -64,4 +64,13 @@ describe('resolveLaunchOpts', () => {
     expect(r.launchOptions.extraHTTPHeaders).toEqual({ 'X-Test': '1' });
     expect(r.launchOptions.permissions).toEqual(['geolocation']);
   });
+
+  it('maps license-key and browser-version', () => {
+    const r = resolveLaunchOpts({
+      licenseKey: 'sk-xxxx',
+      browserVersion: '148.0.7778.215.5',
+    });
+    expect(r.launchOptions.licenseKey).toBe('sk-xxxx');
+    expect(r.launchOptions.browserVersion).toBe('148.0.7778.215.5');
+  });
 });
