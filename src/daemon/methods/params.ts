@@ -67,6 +67,7 @@ export function filterSnapshot(
   let items = snapshot.items;
 
   if (opts.compact) {
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     items = items.map(({ bbox: _b, selector: _s, ...rest }) => rest);
   }
 

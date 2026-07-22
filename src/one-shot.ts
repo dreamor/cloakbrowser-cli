@@ -44,7 +44,7 @@ export async function oneShotFetch(url: string, opts: FetchOpts): Promise<FetchR
     let status: 'ok' | 'navigation-failed' = 'ok';
     try {
       await page.goto(url, gotoOpts);
-    } catch (err) {
+    } catch {
       status = 'navigation-failed';
       // Don't re-throw — return partial result so the agent can decide what to do
     }

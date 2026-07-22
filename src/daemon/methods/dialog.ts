@@ -20,6 +20,7 @@ export const dialogMethods: Record<string, MethodFn> = {
     const timeoutMs = optNum(params, 'timeout') ?? DEFAULT_DIALOG_TIMEOUT_MS;
     const ref = ctx.registry.requirePage(sid, optStr(params, 'page_id'));
     return await new Promise<{ handled: true; action: string; type: string; message: string }>((resolve, reject) => {
+      // eslint-disable-next-line prefer-const
       let timer: NodeJS.Timeout | undefined;
 
       const handler = (...args: unknown[]): void => {

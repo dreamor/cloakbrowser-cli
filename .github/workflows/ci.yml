@@ -90,6 +90,7 @@ jobs:
           node-version: 22
           cache: npm
       - run: npm ci
+      - run: npm run lint
       - name: Check for console.log
         run: |
           matches=$(grep -rn 'console\.log' src/ --include='*.ts' || true)

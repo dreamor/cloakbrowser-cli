@@ -1,6 +1,6 @@
 import { Command } from 'commander';
 import { createInterface } from 'node:readline';
-import { getClient, type RpcCallOptions } from '../client.js';
+import { getClient } from '../client.js';
 import { ok, fail, type GlobalFlags } from '../output.js';
 import { resolveSid, saveLastSession } from '../utils/session-resolver.js';
 import { CloakError } from '../errors.js';

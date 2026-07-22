@@ -1,5 +1,4 @@
 import type { MethodCtx, MethodFn } from './index.js';
-import { CloakError } from '../../errors.js';
 import { getDefaultContext } from '../../browser.js';
 import { optStr, reqStr } from './params.js';
 

@@ -9,7 +9,7 @@ export const daemonMethods: Record<string, MethodFn> = {
     node: process.version,
     platform: process.platform,
   }),
-  'daemon.methods': (_p, _ctx) => {
+  'daemon.methods': () => {
     // late import to avoid cycle
     return import('./index.js').then((m) => m.listMethods());
   },

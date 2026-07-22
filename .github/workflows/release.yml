@@ -18,8 +18,8 @@ permissions:
   contents: read
 
 jobs:
-  validate:
-    name: Validate before release
+  typecheck:
+    name: Type Check
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v5
@@ -29,13 +29,94 @@ jobs:
           cache: npm
       - run: npm ci
       - run: npm run typecheck
+
+  build:
+    name: Build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
       - run: npm run build
+      - name: Verify dist artifacts
+        run: |
+          test -f dist/cli.js || { echo "::error::dist/cli.js missing"; exit 1; }
+          test -f dist/cli.d.ts || { echo "::error::dist/cli.d.ts missing"; exit 1; }
+          echo "Build artifacts verified"
+
+  unit-tests:
+    name: Unit Tests (Node ${{ matrix.node-version }})
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        node-version: [20, 22]
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version: ${{ matrix.node-version }}
+          cache: npm
+      - run: npm ci
       - run: npm test
+
+  e2e-tests:
+    name: E2E Tests
+    runs-on: ubuntu-latest
+    needs: [build]
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npm run build
+      - name: Install CloakBrowser binary
+        run: npx cloakbrowser install || echo "::warning::CloakBrowser binary install skipped"
+      - name: Install Playwright browsers
+        run: npx playwright-core install chromium || echo "::warning::Playwright chromium install skipped"
+      - run: npm run test:e2e
+        env:
+          CI: true
+        continue-on-error: true
+
+  lint:
+    name: Lint
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npm run lint
+      - name: Check for console.log
+        run: |
+          matches=$(grep -rn 'console\.log' src/ --include='*.ts' || true)
+          if [ -n "$matches" ]; then
+            echo "::error::Found console.log in source code"
+            echo "$matches"
+            exit 1
+          fi
+          echo "No console.log found"
+      - name: Check for hardcoded secrets
+        run: |
+          matches=$(grep -rnE '(api_key|apikey|secret|password|token|auth_token)\s*[:=]\s*["'"'"'][^"'"'"']+["'"'"']' src/ --include='*.ts' -i || true)
+          if [ -n "$matches" ]; then
+            echo "::error::Potential hardcoded secret found"
+            echo "$matches"
+            exit 1
+          fi
+          echo "No hardcoded secrets found"
 
   publish-npm:
     name: Publish to npm
     runs-on: ubuntu-latest
-    needs: [validate]
+    needs: [typecheck, build, unit-tests, e2e-tests, lint]
     environment: release
     permissions:
       id-token: write
@@ -81,7 +162,7 @@ jobs:
   github-release:
     name: Create GitHub Release
     runs-on: ubuntu-latest
-    needs: [validate, publish-npm]
+    needs: [publish-npm]
     permissions:
       contents: write
       id-token: write
