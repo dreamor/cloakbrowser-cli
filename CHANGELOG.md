@@ -5,6 +5,23 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.5.5] - 2026-07-30
+
+### Fixed
+
+- **`--extension` never took effect** — CLI passed `extension_paths` (Python API name) to the JS wrapper, which only reads camelCase `extensionPaths`. Chrome extensions were silently ignored. Now serialized as `extensionPaths`; regression test covers the key name.
+
+### Added
+
+- **`--release-channel <stable|preview>`** — Opt into the CloakBrowser 0.5.2 Preview channel (also honors `CLOAKBROWSER_RELEASE_CHANNEL`).
+- **`--no-fingerprint-noise`** — Disable fingerprint noise injection while keeping the deterministic seed (cloakbrowser 0.3.19).
+- **`--fingerprint-allow-3p-cookies`** — Allow third-party cookies for reCAPTCHA v3 / SSO / payment flows (cloakbrowser 0.4.8).
+- **`LICENSE_ERROR` error code** — Maps cloakbrowser 0.4.11's `CloakBrowserLicenseError` (detected by `err.name`) so Pro license denials surface with a clear code instead of `INTERNAL_ERROR`.
+
+### Changed
+
+- **peerDependency** — `cloakbrowser >=0.5.2` (was `>=0.3.0`). Devs bumped to `>=0.5.3`. Inline version hints refreshed.
+
 ## [0.5.4] - 2026-07-22
 
 ### Changed
