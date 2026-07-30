@@ -73,4 +73,37 @@ describe('resolveLaunchOpts', () => {
     expect(r.launchOptions.licenseKey).toBe('sk-xxxx');
     expect(r.launchOptions.browserVersion).toBe('148.0.7778.215.5');
   });
+
+  it('maps release-channel preview/stable', () => {
+    expect(resolveLaunchOpts({ releaseChannel: 'preview' }).launchOptions.releaseChannel).toBe('preview');
+    expect(resolveLaunchOpts({ releaseChannel: 'stable' }).launchOptions.releaseChannel).toBe('stable');
+  });
+
+  it('rejects invalid release-channel', () => {
+    expect(() =>
+      resolveLaunchOpts({ releaseChannel: 'nightly' as unknown as 'preview' })
+    ).toThrow(/stable.*preview/);
+  });
+
+  it('forwards extensions as camelCase extensionPaths (not snake_case)', () => {
+    const r = resolveLaunchOpts({ extensions: ['/abs/ext-a', '/abs/ext-b'] });
+    expect(r.launchOptions.extensionPaths).toEqual(['/abs/ext-a', '/abs/ext-b']);
+    expect(r.launchOptions.extension_paths).toBeUndefined();
+  });
+
+  it('emits --fingerprint-noise=false only when explicitly disabled', () => {
+    expect(resolveLaunchOpts({ fingerprintNoise: false }).launchOptions.args).toContain(
+      '--fingerprint-noise=false'
+    );
+    // Default / not-passed: no flag
+    expect(resolveLaunchOpts({}).launchOptions.args).toBeUndefined();
+    expect(resolveLaunchOpts({ fingerprintNoise: true }).launchOptions.args).toBeUndefined();
+  });
+
+  it('emits --fingerprint-allow-3p-cookies when enabled', () => {
+    expect(
+      resolveLaunchOpts({ fingerprintAllow3pCookies: true }).launchOptions.args
+    ).toContain('--fingerprint-allow-3p-cookies');
+    expect(resolveLaunchOpts({ fingerprintAllow3pCookies: false }).launchOptions.args).toBeUndefined();
+  });
 });

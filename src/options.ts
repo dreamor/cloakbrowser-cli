@@ -2,6 +2,8 @@ import type { Command } from 'commander';
 import { CloakError } from './errors.js';
 import { parseViewport, parseJsonArg, parseInteger } from './utils/parse.js';
 
+export type ReleaseChannel = 'stable' | 'preview';
+
 /**
  * Raw CLI option set for launching a CloakBrowser session.
  * Maps to the union of: launch / launchContext / launchPersistentContext.
@@ -11,6 +13,7 @@ export type LaunchOpts = {
   headless?: boolean;
   persistent?: string;
   channel?: string;
+  releaseChannel?: ReleaseChannel;
 
   // Proxy + geo
   proxy?: string;
@@ -23,6 +26,8 @@ export type LaunchOpts = {
   userAgent?: string;
   viewport?: string;
   fingerprint?: string;
+  fingerprintNoise?: boolean;
+  fingerprintAllow3pCookies?: boolean;
   platform?: 'windows' | 'macos' | 'linux';
   platformVersion?: string;
   brand?: string;
@@ -87,6 +92,12 @@ function buildFingerprintArgs(opts: LaunchOpts): string[] {
       args.push(`--fingerprint-screen-height=${parsed.height}`);
     }
   }
+  if (opts.fingerprintNoise === false) {
+    args.push('--fingerprint-noise=false');
+  }
+  if (opts.fingerprintAllow3pCookies) {
+    args.push('--fingerprint-allow-3p-cookies');
+  }
   return args;
 }
 
@@ -95,6 +106,15 @@ export function resolveLaunchOpts(opts: LaunchOpts): ResolvedLaunchOpts {
 
   if (opts.headless !== undefined) launchOptions.headless = opts.headless;
   if (opts.channel) launchOptions.channel = opts.channel;
+  if (opts.releaseChannel) {
+    if (opts.releaseChannel !== 'stable' && opts.releaseChannel !== 'preview') {
+      throw new CloakError(
+        'INVALID_ARG',
+        `--release-channel must be 'stable' or 'preview' (got '${opts.releaseChannel}')`
+      );
+    }
+    launchOptions.releaseChannel = opts.releaseChannel;
+  }
   // Proxy credential routing (URL-encoded special chars in passwords,
   // inline --proxy-server bypass for HTTP-on-supported-platforms) is
   // handled transparently by cloakbrowser >= 0.4.0 inside launch().
@@ -122,7 +142,9 @@ export function resolveLaunchOpts(opts: LaunchOpts): ResolvedLaunchOpts {
     launchOptions.permissions = parseJsonArg<string[]>(opts.permissions, 'permissions');
   }
   if (opts.extensions && opts.extensions.length > 0) {
-    launchOptions.extension_paths = opts.extensions;
+    // CloakBrowser JS wrapper only reads camelCase `extensionPaths`; the
+    // snake_case `extension_paths` (Python API name) is silently ignored.
+    launchOptions.extensionPaths = opts.extensions;
   }
   if (opts.slowMo !== undefined) {
     launchOptions.slowMo = parseInteger(opts.slowMo, 'slow-mo');
@@ -183,7 +205,10 @@ export const LAUNCH_OPTION_DEFS: readonly CliOptionDef[] = [
   { flags: '--humanize-config <json>', description: 'Custom humanize config as JSON' },
   { flags: '--license-key <key>', description: 'CloakBrowser Pro license key (env: CLOAKBROWSER_LICENSE_KEY)' },
   { flags: '--browser-version <version>', description: 'Pin to a specific Chromium build (e.g. 148.0.7778.215.5)' },
+  { flags: '--release-channel <name>', description: "Binary release channel (stable|preview; env: CLOAKBROWSER_RELEASE_CHANNEL)" },
   { flags: '--fingerprint <seed>', description: 'Deterministic fingerprint seed' },
+  { flags: '--no-fingerprint-noise', description: 'Disable fingerprint noise injection (keep seed deterministic)' },
+  { flags: '--fingerprint-allow-3p-cookies', description: 'Allow third-party cookies (reCAPTCHA v3 / SSO / payment)' },
   { flags: '--timezone <id>', description: 'Timezone (e.g. America/New_York)' },
   { flags: '--locale <id>', description: 'Locale (e.g. en-US)' },
   { flags: '--user-agent <ua>', description: 'Override User-Agent' },
@@ -229,6 +254,7 @@ export function pickLaunchOpts(o: Record<string, unknown>): LaunchOpts {
     headless: get<boolean>('headless'),
     persistent: get<string>('persistent'),
     channel: get<string>('channel'),
+    releaseChannel: get<ReleaseChannel>('releaseChannel'),
     proxy: get<string>('proxy'),
     geoip: get<boolean>('geoip'),
     timezone: get<string>('timezone'),
@@ -237,6 +263,8 @@ export function pickLaunchOpts(o: Record<string, unknown>): LaunchOpts {
     userAgent: get<string>('userAgent'),
     viewport: get<string>('viewport'),
     fingerprint: get<string>('fingerprint'),
+    fingerprintNoise: get<boolean>('fingerprintNoise'),
+    fingerprintAllow3pCookies: get<boolean>('fingerprintAllow3pCookies'),
     platform: get<'windows' | 'macos' | 'linux'>('platform'),
     platformVersion: get<string>('platformVersion'),
     brand: get<string>('brand'),

@@ -9,6 +9,7 @@ export type ErrorCode =
   | 'SESSION_NOT_FOUND'
   | 'PAGE_NOT_FOUND'
   | 'BROWSER_LAUNCH_FAILED'
+  | 'LICENSE_ERROR'
   | 'NAVIGATION_FAILED'
   | 'TIMEOUT'
   | 'SELECTOR_NOT_FOUND'
@@ -42,6 +43,13 @@ export class CloakError extends Error {
 export function fromUnknown(err: unknown): CloakError {
   if (err instanceof CloakError) return err;
   if (err instanceof Error) {
+    // cloakbrowser >= 0.4.11 throws a named `CloakBrowserLicenseError` when
+    // the Pro binary refuses a launch for a license reason. Detect by name
+    // so we don't need to import the class (peer dep may be absent at type
+    // time). Check this before the generic BROWSER_LAUNCH_FAILED fallback.
+    if (err.name === 'CloakBrowserLicenseError') {
+      return new CloakError('LICENSE_ERROR', err.message);
+    }
     // Map known Playwright/cloakbrowser errors
     const msg = err.message;
     if (/Timeout .* exceeded/i.test(msg)) {

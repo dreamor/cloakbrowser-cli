@@ -33,6 +33,14 @@ describe('fromUnknown', () => {
     expect(fromUnknown(e).code).toBe('NAVIGATION_FAILED');
   });
 
+  it('maps CloakBrowserLicenseError (by name) to LICENSE_ERROR', () => {
+    const e = new Error('CloakBrowser Pro: license key is invalid.');
+    e.name = 'CloakBrowserLicenseError';
+    const mapped = fromUnknown(e);
+    expect(mapped.code).toBe('LICENSE_ERROR');
+    expect(mapped.message).toBe('CloakBrowser Pro: license key is invalid.');
+  });
+
   it('handles non-Error values', () => {
     expect(fromUnknown('something').code).toBe('INTERNAL_ERROR');
   });
