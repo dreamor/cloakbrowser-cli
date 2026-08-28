@@ -53,7 +53,7 @@ The daemon keeps `Browser`, `Context`, and `Page` instances alive between CLI in
 npm install -g @dreamor/cloakbrowser-cli cloakbrowser playwright-core
 ```
 
-Requires Node 20.0+. Peer deps `cloakbrowser` (≥ 0.3.0, 0.4.10+ recommended) and `playwright-core` (≥ 1.53.0) are installed alongside. Optional peers `mmdb-lib` and `socks-proxy-agent` enable Pro GeoIP and SOCKS proxy features.
+Requires Node 20.0+. Peer deps `cloakbrowser` (≥ 0.3.0, 0.5.9+ recommended) and `playwright-core` (≥ 1.53.0) are installed alongside. Optional peers `mmdb-lib` and `socks-proxy-agent` enable Pro GeoIP and SOCKS proxy features.
 
 First real browser launch downloads the stealth Chromium binary (~200MB, cached at `~/.cloakbrowser/`). Pre-download with `cloak binary install`.
 

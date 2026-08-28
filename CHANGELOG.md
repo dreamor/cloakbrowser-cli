@@ -5,6 +5,16 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.5.6] - 2026-08-28
+
+### Fixed
+
+- **Humanize actionability errors mapped to `INTERNAL_ERROR`** — cloakbrowser's `human/actionability.ts` throws `ElementNot{Attached,Visible,Stable,Enabled,Editable,ReceivingEvents}Error` / `ElementTargetChangedError` with message shape `Element "sel" failed <check> check: ...`, which didn't match the `/selector|locator/i` heuristic in `fromUnknown()`. Now matched by message shape and mapped to `TIMEOUT`, consistent with what non-humanized Playwright reports for the same underlying condition.
+
+### Changed
+
+- **Docs** — Verified compatibility with cloakbrowser 0.5.9 (typecheck + full unit suite pass unmodified against it — public API surface, i.e. `index.d.ts`/`playwright.d.ts`/`puppeteer.d.ts`/`config.d.ts`/`types.d.ts`, is byte-identical since 0.5.2; 0.5.8/0.5.9 only touched internal `human/*` humanize internals and the `license.ts` seat-lookup API, neither of which this CLI imports). Bumped devDependency to `cloakbrowser >=0.5.9` and refreshed recommended-version hints in README/SKILL.md/CONTRIBUTING.md.
+
 ## [0.5.5] - 2026-07-30
 
 ### Fixed

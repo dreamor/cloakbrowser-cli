@@ -55,6 +55,16 @@ export function fromUnknown(err: unknown): CloakError {
     if (/Timeout .* exceeded/i.test(msg)) {
       return new CloakError('TIMEOUT', msg);
     }
+    // cloakbrowser's humanize layer (`human/actionability.ts`) throws
+    // ElementNot{Attached,Visible,Stable,Enabled,Editable,ReceivingEvents}Error /
+    // ElementTargetChangedError with the shape `Element "sel" failed <check> check: ...`.
+    // These only reach the caller after the internal action-retry deadline expires, so
+    // TIMEOUT mirrors what non-humanized Playwright reports for the same condition
+    // (and avoids them silently falling through to INTERNAL_ERROR, since the message
+    // doesn't contain "selector"/"locator").
+    if (/^Element .* failed .* check:/.test(msg)) {
+      return new CloakError('TIMEOUT', msg);
+    }
     if (/Cannot find module ['"]cloakbrowser['"]|Cannot find module ['"]playwright-core['"]/i.test(msg)) {
       return new CloakError('MISSING_DEPENDENCY', msg);
     }

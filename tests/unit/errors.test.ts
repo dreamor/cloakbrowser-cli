@@ -33,6 +33,12 @@ describe('fromUnknown', () => {
     expect(fromUnknown(e).code).toBe('NAVIGATION_FAILED');
   });
 
+  it('maps humanize actionability failures to TIMEOUT', () => {
+    const e = new Error('Element "#submit" failed visible check: element is not visible');
+    e.name = 'ElementNotVisibleError';
+    expect(fromUnknown(e).code).toBe('TIMEOUT');
+  });
+
   it('maps CloakBrowserLicenseError (by name) to LICENSE_ERROR', () => {
     const e = new Error('CloakBrowser Pro: license key is invalid.');
     e.name = 'CloakBrowserLicenseError';
