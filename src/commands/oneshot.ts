@@ -2,6 +2,7 @@ import { Command } from 'commander';
 import { ok, fail, type GlobalFlags } from '../output.js';
 import { attachLaunchOptions, pickLaunchOpts } from '../options.js';
 import { oneShotFetch, oneShotScrape } from '../one-shot.js';
+import { CloakError } from '../errors.js';
 
 type GF = () => GlobalFlags;
 
@@ -42,6 +43,9 @@ export function buildFetchCmd(g: GF): Command {
             pdfPath: typeof opts.pdf === 'string' ? opts.pdf : flags.out || '',
           } : {}),
         });
+        if (data.status === 'navigation-failed') {
+          fail(new CloakError('NAVIGATION_FAILED', `Navigation failed: ${url}`, { partial: data }), flags);
+        }
         ok(data, flags);
       } catch (err) { fail(err, flags); }
     });
