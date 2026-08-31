@@ -1,5 +1,7 @@
 # @dreamor/cloakbrowser-cli
 
+[![Get CloakBrowser](https://img.shields.io/badge/CloakBrowser-Referral%20Link-orange)](https://www.orcarouter.ai/ref/ref_832a43c568e048ba012b)
+
 > Agent-friendly CLI for [CloakBrowser](https://github.com/CloakHQ/CloakBrowser) — stealth Chromium that passes every bot detection test. Covers all CloakBrowser features so other AI agents can drive a real browser from any shell.
 
 ```bash
@@ -8,6 +10,11 @@ cloak doctor                    # confirm everything is installed
 cloak binary install            # one-time ~200MB Chromium download
 cloak fetch https://example.com --markdown --pretty
 ```
+
+---
+### 💛 Support this project
+Sign up for CloakBrowser via [my referral link](https://www.orcarouter.ai/ref/ref_832a43c568e048ba012b) — costs you nothing extra, helps keep this CLI maintained.
+---
 
 ## Why
 
