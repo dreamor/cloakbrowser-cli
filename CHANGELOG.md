@@ -5,6 +5,17 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.5.7] - 2026-09-01
+
+### Fixed
+
+- **`fetch` masked navigation failures as success** — One-shot `cloak fetch <url>` caught `page.goto()` errors internally and returned `status: 'navigation-failed'` inside an `ok:true`/exit-0 envelope, breaking the documented ok/exit-code contract and making shell chaining (`cloak fetch $url && ...`) unsafe. Now emits `NAVIGATION_FAILED` (`ok:false`, exit 1) via `fail()`, with the partially-extracted data preserved under `error.details.partial` for agents that still want it. Matches the failure semantics already used by session-based `goto` and `scrape`.
+- **GeoIP failures surfaced as unhelpful `INTERNAL_ERROR`** — cloakbrowser >= 0.5.10's `geoip.ts` now throws instead of silently returning nulls when `--geoip` can't resolve a timezone/locale (e.g. missing `mmdb-lib`, unreachable egress IP, database unavailable). `fromUnknown()` now maps these to `MISSING_DEPENDENCY`, `TIMEOUT`, or `NETWORK_ERROR` as appropriate instead of falling through to `INTERNAL_ERROR`.
+
+### Changed
+
+- **Docs** — Verified compatibility with cloakbrowser 0.5.10 (typecheck + full unit suite pass unmodified against it — public API surface is byte-identical to 0.5.9; only internal `download.ts` (added `showWelcome()`, unused by this CLI) and `geoip.ts` changed). Bumped devDependency to `cloakbrowser >=0.5.10`.
+
 ## [0.5.6] - 2026-08-28
 
 ### Fixed

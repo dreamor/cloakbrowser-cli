@@ -68,6 +68,19 @@ export function fromUnknown(err: unknown): CloakError {
     if (/Cannot find module ['"]cloakbrowser['"]|Cannot find module ['"]playwright-core['"]/i.test(msg)) {
       return new CloakError('MISSING_DEPENDENCY', msg);
     }
+    // cloakbrowser >= 0.5.10's `geoip.ts` throws instead of silently
+    // returning nulls when `--geoip` can't resolve a timezone/locale.
+    // Check these before the generic NAVIGATION_FAILED/net::ERR_ heuristic
+    // below, since a proxy-side geoip lookup failure often also matches it.
+    if (/mmdb-lib is required/i.test(msg)) {
+      return new CloakError('MISSING_DEPENDENCY', msg);
+    }
+    if (/GeoIP resolution timed out/i.test(msg)) {
+      return new CloakError('TIMEOUT', msg);
+    }
+    if (/GeoIP (resolution|lookup) failed/i.test(msg)) {
+      return new CloakError('NETWORK_ERROR', msg);
+    }
     if (/net::ERR_|page\.goto/i.test(msg)) {
       return new CloakError('NAVIGATION_FAILED', msg);
     }

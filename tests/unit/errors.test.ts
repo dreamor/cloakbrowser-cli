@@ -33,6 +33,21 @@ describe('fromUnknown', () => {
     expect(fromUnknown(e).code).toBe('NAVIGATION_FAILED');
   });
 
+  it('maps missing mmdb-lib (geoip) to MISSING_DEPENDENCY', () => {
+    const e = new Error('mmdb-lib is required for geoip: true. Install it with:\n  npm install mmdb-lib');
+    expect(fromUnknown(e).code).toBe('MISSING_DEPENDENCY');
+  });
+
+  it('maps geoip resolution timeout to TIMEOUT', () => {
+    const e = new Error('GeoIP resolution timed out after 20s');
+    expect(fromUnknown(e).code).toBe('TIMEOUT');
+  });
+
+  it('maps geoip resolution/lookup failures to NETWORK_ERROR', () => {
+    expect(fromUnknown(new Error('GeoIP resolution failed: could not discover the egress IP')).code).toBe('NETWORK_ERROR');
+    expect(fromUnknown(new Error('GeoIP lookup failed for 1.2.3.4: database unavailable')).code).toBe('NETWORK_ERROR');
+  });
+
   it('maps humanize actionability failures to TIMEOUT', () => {
     const e = new Error('Element "#submit" failed visible check: element is not visible');
     e.name = 'ElementNotVisibleError';
