@@ -38,11 +38,18 @@ export function emit(envelope: Envelope, flags: GlobalFlags): void {
 
   // If --out is set and this is a successful response, write JSON to file
   if (flags.out && envelope.ok) {
-    const buf = Buffer.from(serialized + '\n', 'utf-8');
-    const meta = writeBinaryOut(buf, flags.out);
-    // Still output a small envelope so the agent gets the file path
-    const outEnvelope = { ok: true, data: meta, session_id: envelope.session_id, page_id: envelope.page_id };
-    stream.write(colorize(outEnvelope, flags.pretty || isTty()) + '\n');
+    try {
+      const buf = Buffer.from(serialized + '\n', 'utf-8');
+      const meta = writeBinaryOut(buf, flags.out);
+      // Still output a small envelope so the agent gets the file path
+      const outEnvelope = { ok: true, data: meta, session_id: envelope.session_id, page_id: envelope.page_id };
+      stream.write(colorize(outEnvelope, flags.pretty || isTty()) + '\n');
+    } catch (err) {
+      // A blocked/unwritable --out path must still land in the JSON error
+      // envelope (not escape as an unhandled rejection through every
+      // `await callDaemon(...)` call site, which would surface as BOOT_ERROR).
+      fail(err, flags);
+    }
     return;
   }
 

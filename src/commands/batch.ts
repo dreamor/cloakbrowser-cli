@@ -101,7 +101,13 @@ export function buildBatchCmd(g: GF): Command {
         return;
       }
 
-      const defaultSession = opts.session ? resolveSid(opts.session as string) : undefined;
+      let defaultSession: string | undefined;
+      try {
+        defaultSession = opts.session ? resolveSid(opts.session as string) : undefined;
+      } catch (err) {
+        fail(err, flags);
+        return;
+      }
       const abortOnError = Boolean(opts.abortOnError);
       const client = getClient();
 

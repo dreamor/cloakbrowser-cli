@@ -1,5 +1,7 @@
-import { Command } from 'commander';
+import { Command, CommanderError } from 'commander';
 import type { GlobalFlags } from './output.js';
+import { fail } from './output.js';
+import { CloakError } from './errors.js';
 import { getClient } from './client.js';
 import { ensureRoot } from './utils/paths.js';
 
@@ -167,5 +169,32 @@ export async function main(argv: string[]): Promise<void> {
     try { getClient().close(); } catch { /* ignore */ }
   });
 
-  await program.parseAsync(argv);
+  // Commander's own parse errors (missing/unknown argument, unknown option,
+  // invalid choice, ...) default to a plain-text stderr write + process.exit,
+  // bypassing the JSON envelope every other error path uses. Route them
+  // through the same envelope so agents can rely on `code`/stderr-JSON
+  // regardless of whether the failure happened before or after an action ran.
+  // `addCommand()` (used everywhere above) does NOT inherit these settings
+  // from the parent the way `.command()` does, so they must be applied to
+  // every command in the tree individually.
+  const suppressDefaultOutput = (cmd: Command): void => {
+    cmd.exitOverride();
+    cmd.configureOutput({ writeErr: () => { /* suppressed; re-emitted as JSON below */ } });
+    for (const sub of cmd.commands) suppressDefaultOutput(sub);
+  };
+  suppressDefaultOutput(program);
+
+  try {
+    await program.parseAsync(argv);
+  } catch (err) {
+    if (err instanceof CommanderError) {
+      // --help / --version and other "successful" exits still just exit.
+      if (err.exitCode === 0) {
+        process.exit(0);
+      }
+      const message = err.message.replace(/^error:\s*/i, '');
+      fail(new CloakError('INVALID_ARG', message, { commanderCode: err.code }), globalFlags());
+    }
+    throw err;
+  }
 }

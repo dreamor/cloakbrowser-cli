@@ -15,7 +15,12 @@ export function callDaemon(
   flags: GlobalFlags,
   rpcOpts?: RpcCallOptions,
 ): Promise<void> {
-  const resolved = resolveSid(rawSid);
+  let resolved: string;
+  try {
+    resolved = resolveSid(rawSid);
+  } catch (err) {
+    return fail(err, flags);
+  }
   saveLastSession(resolved);
   return getClient()
     .call(method, { ...params, session_id: resolved }, rpcOpts)
