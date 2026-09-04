@@ -42,7 +42,7 @@ export const snapshotMethods: Record<string, MethodFn> = {
       title: tagged.title,
       count: filtered.length,
       total: tagged.items.length,
-      elements: filtered,
+      items: filtered,
     };
   },
 
