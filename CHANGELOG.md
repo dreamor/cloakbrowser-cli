@@ -5,6 +5,35 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.5.8] - 2026-09-04
+
+Top-to-bottom correctness pass against a real stealth browser session: five root-cause clusters, verified end-to-end where a browser is required.
+
+### Fixed
+
+- **`page.evaluate()` with a string snippet + `arg` was silently ignored** (cluster of 7) — Playwright/cloakbrowser only invoke `pageFunction` and bind `arg` when given a *real* function. Every string arrow-function + arg pair — `scrape` (crashed), `local/session-storage set` (silent no-op reporting success), `blur`, `scroll --to <sel>` / `scroll -x -y`, `eval`/`eval-file --arg`, `wait --stable`, `wait --text` (resolved immediately without checking the page) — is now materialized via `utils/page-fn.ts#toPageFn()`.
+- **Launch options were silently dropped by cloakbrowser** (cluster of 6) — options not in cloakbrowser's fixed top-level interface must be nested: `--extra-headers`/`--permissions`/`--storage-state` now go through `contextOptions`, `--slow-mo`/`--timeout`/`--channel` through `launchOptions`. Also fixed `--persistent` crashing with `The "path" argument must be of type string` (cloakbrowser's `launchPersistentContext` takes a single options object; the old `(dir, opts)` call shape never reached it).
+- **`BOOT_ERROR` leaked for session-resolution failures** — `@alias`/`-`/`--session` typos escaped the JSON envelope through the bin-level catch and reported a fatal-looking `BOOT_ERROR` with stack. `callDaemon()` and `batch --session` now route through `fail()` → `SESSION_NOT_FOUND`.
+- **Commander parse errors bypassed the envelope** — missing/unknown arguments/flags wrote plain text to stderr. The whole command tree now applies `exitOverride`/`configureOutput`/`allowExcessArguments(false)` (surplus positionals are rejected instead of silently dropped), and `ok()` failures (blocked/unwritable `--out` path) are caught at the single `emit()` choke point.
+- **`snapshot` filtering order** — `--compact` stripped `bbox` *before* the viewport check ran, so `--compact --viewport-only --viewport-height=N` always returned 0 items; compact now runs last. `--viewport-only` without `--viewport-height` used to be a silent no-op; it now falls back to the live viewport size.
+- **`network.recent` reported `ok:true` with empty data** — an agent reads that as "no requests were made". It now fails with `NOT_IMPLEMENTED` (matching `storage.load`) and points at the `performance.getEntriesByType("resource")` workaround.
+- **Error-code mapping** — bogus `--license-key` threw a plain Error whose message carries the plan info; it now maps to `LICENSE_ERROR` via message shape, not just the `CloakBrowserLicenseError` name. `Download failed: HTTP 404` (pinned a nonexistent `--browser-version`) → `INVALID_ARG`; other download failures → `NETWORK_ERROR`. `Failed to launch …` → `BROWSER_LAUNCH_FAILED`; unrecognized `keyboard.press` keys → `INVALID_ARG`.
+- **`cloak connect` was not a CDP attach at all** — it launched a brand-new browser with a Chromium-ignored `--remote-debugging-url` arg, so dead ports "succeeded" in ~1s. Reimplemented on `playwright-core` `chromium.connectOverCDP()` (new `session.connect` daemon method) with `--timeout` fail-fast; `session close` now only disconnects from a browser it didn't start.
+- **Binary-not-installed launches polluted stdout** — cloakbrowser's ~200MB download progress lines went straight to stdout, breaking the "stdout is exactly one JSON envelope" contract. Everything `[cloakbrowser]`-prefixed is now rerouted to stderr (always restored, even on throw) with a one-line notice before the download starts.
+- **`cloak version` showed `cloakbrowser: "unknown"`** — the dependency's package.json isn't exported; the version is now read directly by walking the same node_modules paths Node would.
+- **`cloak serve` leaked a raw Python traceback** (missing interpreter/module) — a fast preflight now reports `MISSING_DEPENDENCY` through the normal envelope while the real server keeps live stdio logs.
+- **Read/write path validation** — `session.save_state`, `storage.save`, and `cookies set --file` now go through `validateWritePath`/`validateReadPath`.
+- **`cloak fingerprint` help recommended unregistered flags** — help text now matches the real short flags (`--platform`, `--screen`, …) that `buildFingerprintArgs` consumes.
+- **`snapshot` key mismatch** — the standalone snapshot returned `elements` while after-action `--snapshot` returned `items`; both now return `items`.
+- **`eval` polish** — `undefined` now serializes to JSON `null` (was the string `"undefined"`); multi-statement snippets fall back from expression-wrapping to a statement body instead of `EVAL_FAILED`.
+- **`local/session-storage get <key>` ignored the key** — now reads just that entry (missing key → `{key: null}`); omitting it still returns everything.
+- **`cloak dialog` blocked a full 30s** — `--timeout <ms>` is now exposed so agents can bound the wait.
+- **`cloak test --detector=botd` pointed at a marketing page** — the original BotD demo is 404 upstream; it now targets the working fingerprint playground page.
+
+### Changed
+
+- Docs: verified against cloakbrowser 0.5.10; devDependency bumped accordingly; removed a stale security audit report whose findings are fixed in current versions.
+
 ## [0.5.7] - 2026-09-01
 
 ### Fixed
