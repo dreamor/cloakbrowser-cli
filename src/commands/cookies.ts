@@ -78,11 +78,12 @@ export function buildStorageCmd(g: GF): Command {
 
 function makeKv(g: GF, name: 'local_storage' | 'session_storage', cmdName: string): Command {
   const cmd = new Command(cmdName).description(`${name.replace('_', '-')} get/set/clear`);
-  cmd.command('get <session_id>')
+  cmd.command('get <session_id> [key]')
     .option('--page <id>')
-    .action(async (sid: string, opts: Record<string, unknown>) => {
+    .action(async (sid: string, key: string | undefined, opts: Record<string, unknown>) => {
       const flags = g();
       const params: Record<string, unknown> = {};
+      if (key) params.key = key;
       if (opts.page) params.page_id = opts.page;
       await callDaemon(`${name}.get`, params, sid, flags);
     });

@@ -28,7 +28,15 @@ export const storageMethods: Record<string, MethodFn> = {
 
   'local_storage.get': async (params, ctx: MethodCtx) => {
     const sid = reqStr(params, 'session_id');
+    const key = optStr(params, 'key');
     const ref = ctx.registry.requirePage(sid, optStr(params, 'page_id'));
+    if (key !== undefined) {
+      const value = (await ref.page.evaluate(
+        toPageFn(`(k) => localStorage.getItem(k)`),
+        key
+      )) as string | null;
+      return { local_storage: { [key]: value } };
+    }
     const data = (await ref.page.evaluate(
       `(() => { const o = {}; for (let i = 0; i < localStorage.length; i++) { const k = localStorage.key(i); if (k) o[k] = localStorage.getItem(k); } return o; })()`
     )) as Record<string, string>;
@@ -56,7 +64,15 @@ export const storageMethods: Record<string, MethodFn> = {
 
   'session_storage.get': async (params, ctx: MethodCtx) => {
     const sid = reqStr(params, 'session_id');
+    const key = optStr(params, 'key');
     const ref = ctx.registry.requirePage(sid, optStr(params, 'page_id'));
+    if (key !== undefined) {
+      const value = (await ref.page.evaluate(
+        toPageFn(`(k) => sessionStorage.getItem(k)`),
+        key
+      )) as string | null;
+      return { session_storage: { [key]: value } };
+    }
     const data = (await ref.page.evaluate(
       `(() => { const o = {}; for (let i = 0; i < sessionStorage.length; i++) { const k = sessionStorage.key(i); if (k) o[k] = sessionStorage.getItem(k); } return o; })()`
     )) as Record<string, string>;
