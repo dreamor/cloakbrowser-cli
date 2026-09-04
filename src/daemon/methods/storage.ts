@@ -3,6 +3,7 @@ import { CloakError } from '../../errors.js';
 import { getDefaultContext } from '../../browser.js';
 import { optStr, reqStr } from './params.js';
 import { validateWritePath } from '../../utils/safepath.js';
+import { toPageFn } from '../../utils/page-fn.js';
 
 export const storageMethods: Record<string, MethodFn> = {
   'storage.save': async (params, ctx: MethodCtx) => {
@@ -40,7 +41,7 @@ export const storageMethods: Record<string, MethodFn> = {
     const value = reqStr(params, 'value');
     const ref = ctx.registry.requirePage(sid, optStr(params, 'page_id'));
     await ref.page.evaluate(
-      `(args) => { localStorage.setItem(args.key, args.value); }`,
+      toPageFn(`(args) => { localStorage.setItem(args.key, args.value); }`),
       { key, value }
     );
     return { set: key };
@@ -68,7 +69,7 @@ export const storageMethods: Record<string, MethodFn> = {
     const value = reqStr(params, 'value');
     const ref = ctx.registry.requirePage(sid, optStr(params, 'page_id'));
     await ref.page.evaluate(
-      `(args) => { sessionStorage.setItem(args.key, args.value); }`,
+      toPageFn(`(args) => { sessionStorage.setItem(args.key, args.value); }`),
       { key, value }
     );
     return { set: key };

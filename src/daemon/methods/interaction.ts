@@ -2,6 +2,7 @@ import type { MethodCtx, MethodFn } from './index.js';
 import { CloakError } from '../../errors.js';
 import { optStr, optNum, optBool, reqStr, resolveUid } from './params.js';
 import { maybeSnapshot } from './snapshot-helper.js';
+import { toPageFn } from '../../utils/page-fn.js';
 
 function commonClickOpts(p: Record<string, unknown>): Record<string, unknown> {
   const o: Record<string, unknown> = {};
@@ -106,7 +107,10 @@ export const interactionMethods: Record<string, MethodFn> = {
     const rawSel = reqStr(params, 'selector');
     const sel = resolveUid(rawSel);
     const ref = ctx.registry.requirePage(sid, optStr(params, 'page_id'));
-    await ref.page.evaluate(`(sel) => { const el = document.querySelector(sel); if (el && 'blur' in el) el.blur(); }`, sel);
+    await ref.page.evaluate(
+      toPageFn(`(sel) => { const el = document.querySelector(sel); if (el && 'blur' in el) el.blur(); }`),
+      sel
+    );
     return maybeSnapshot({ blurred: rawSel }, ref, params);
   },
 
@@ -123,11 +127,11 @@ export const interactionMethods: Record<string, MethodFn> = {
       await ref.page.evaluate('window.scrollTo(0, document.body.scrollHeight)');
     } else if (to) {
       await ref.page.evaluate(
-        `(sel) => { const el = document.querySelector(sel); if (el) el.scrollIntoView({behavior:'smooth', block:'center'}); }`,
+        toPageFn(`(sel) => { const el = document.querySelector(sel); if (el) el.scrollIntoView({behavior:'smooth', block:'center'}); }`),
         to
       );
     } else if (x !== undefined || y !== undefined) {
-      await ref.page.evaluate(`(coord) => window.scrollTo(coord.x, coord.y)`, { x: x ?? 0, y: y ?? 0 });
+      await ref.page.evaluate(toPageFn(`(coord) => window.scrollTo(coord.x, coord.y)`), { x: x ?? 0, y: y ?? 0 });
     }
     return maybeSnapshot({ scrolled: true }, ref, params);
   },

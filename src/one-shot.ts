@@ -2,6 +2,7 @@ import { launchFromResolved, getPageOrCreate } from './browser.js';
 import { resolveLaunchOpts, type LaunchOpts } from './options.js';
 import { htmlToMarkdown } from './utils/markdown.js';
 import { maybeFileOrBase64 } from './output.js';
+import { toPageFn } from './utils/page-fn.js';
 
 export type FetchOpts = LaunchOpts & {
   waitUntil?: 'load' | 'domcontentloaded' | 'networkidle' | 'commit';
@@ -110,7 +111,7 @@ export async function oneShotScrape(url: string, opts: ScrapeOpts): Promise<Scra
     await page.goto(url, gotoOpts);
 
     const extracted = (await page.evaluate(
-      `((args) => {
+      toPageFn(`(args) => {
         const els = args.multi
           ? Array.from(document.querySelectorAll(args.sel))
           : [document.querySelector(args.sel)].filter(Boolean);
@@ -119,7 +120,7 @@ export async function oneShotScrape(url: string, opts: ScrapeOpts): Promise<Scra
           html: el.outerHTML,
           attr: args.attr ? el.getAttribute(args.attr) : null,
         }));
-      })`,
+      }`),
       { sel: opts.selector, multi: Boolean(opts.multi), attr: opts.attr ?? null }
     )) as Array<{ text: string; html: string; attr: string | null }>;
 

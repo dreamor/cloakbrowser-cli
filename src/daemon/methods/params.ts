@@ -154,7 +154,7 @@ export const SNAPSHOT_TAGGER_SCRIPT = `(() => {
  * - Subsequent calls: checks if the quiet period (arg) has elapsed since the last mutation.
  * - Returns `{ stable: true, mutations: <count> }` when stable, `false` to keep polling.
  */
-export const WAIT_STABLE_SCRIPT = `
+export const WAIT_STABLE_SCRIPT = `(arg) => {
   if (!window.__cloakStable) {
     window.__cloakStable = { lastMutation: Date.now(), mutationCount: 0 };
     const obs = new MutationObserver(() => {
@@ -174,7 +174,7 @@ export const WAIT_STABLE_SCRIPT = `
   return elapsed >= quietMs
     ? { stable: true, mutations: window.__cloakStable.mutationCount }
     : false;
-`;
+}`;
 
 /**
  * In-page script that tags interactive + content elements within the main document

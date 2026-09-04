@@ -1,6 +1,7 @@
 import type { MethodCtx, MethodFn } from './index.js';
 import { CloakError } from '../../errors.js';
 import { optStr, optNum, reqStr, WAIT_STABLE_SCRIPT } from './params.js';
+import { toPageFn } from '../../utils/page-fn.js';
 
 export const waitMethods: Record<string, MethodFn> = {
   'page.wait': async (params, ctx: MethodCtx) => {
@@ -18,7 +19,7 @@ export const waitMethods: Record<string, MethodFn> = {
       const quietMs = typeof params.quiet_ms === 'number' ? params.quiet_ms : 500;
       const opts: Record<string, unknown> = {};
       if (timeout !== undefined) opts.timeout = timeout;
-      const jsHandle = await ref.page.waitForFunction(WAIT_STABLE_SCRIPT, quietMs, opts) as { jsonValue: () => Promise<Record<string, unknown>> };
+      const jsHandle = await ref.page.waitForFunction(toPageFn(WAIT_STABLE_SCRIPT), quietMs, opts) as { jsonValue: () => Promise<Record<string, unknown>> };
       const value = await jsHandle.jsonValue();
       return { waited: 'stable', result: value };
     }
@@ -34,7 +35,7 @@ export const waitMethods: Record<string, MethodFn> = {
       const opts: Record<string, unknown> = {};
       if (timeout !== undefined) opts.timeout = timeout;
       await ref.page.waitForFunction(
-        `(t) => document.body && document.body.innerText && document.body.innerText.includes(t)`,
+        toPageFn(`(t) => document.body && document.body.innerText && document.body.innerText.includes(t)`),
         text,
         opts
       );
