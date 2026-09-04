@@ -7,7 +7,9 @@ on:
 
 concurrency:
   group: release-${{ github.ref }}
-  cancel-in-progress: true
+  # Never cancel a release once started: cancelling mid-publish could leave
+  # npm updated while the GitHub Release step never runs.
+  cancel-in-progress: false
 
 defaults:
   run:
@@ -22,6 +24,7 @@ jobs:
     name: Verify CI & Publish to npm
     runs-on: ubuntu-latest
     environment: release
+    timeout-minutes: 30
     permissions:
       id-token: write
       contents: read
@@ -31,24 +34,43 @@ jobs:
       - uses: actions/checkout@v5
 
       # Typecheck/build/tests/lint run once in the CI workflow on the same
-      # commit. Release process: push main, wait for CI to pass, then tag.
-      - name: Verify CI passed for this commit
+      # commit. Tagging may happen right after pushing main, so poll until
+      # the CI run for this SHA completes instead of failing on the race.
+      - name: Wait for CI passed and verify for this commit
         env:
           GH_TOKEN: ${{ github.token }}
+          MAX_WAIT_SECONDS: '1200'
+          POLL_INTERVAL: '30'
         run: |
           # Guard against GITHUB_SHA being the annotated tag object: resolve to
           # the commit the tag points to, fall back to GITHUB_SHA if local
           # rev-parse can't deref it (shallow checkout).
           SHA="$(git rev-parse "${GITHUB_SHA}^{commit}" 2>/dev/null || echo "${GITHUB_SHA}")"
-          read -r ci_status ci_conclusion <<<"$(gh api \
-            "repos/${GITHUB_REPOSITORY}/actions/workflows/ci.yml/runs?head_sha=${SHA}" \
-            --jq 'if .total_count == 0 then "none none" else .workflow_runs[0].status + " " + (.workflow_runs[0].conclusion // "pending") end')"
+
+          check_ci() {
+            gh api \
+              "repos/${GITHUB_REPOSITORY}/actions/workflows/ci.yml/runs?head_sha=${SHA}" \
+              --jq 'if .total_count == 0 then "none none" else .workflow_runs[0].status + " " + (.workflow_runs[0].conclusion // "pending") end'
+          }
+
+          elapsed=0
+          ci_status="none"
+          ci_conclusion="pending"
+          while [ "${elapsed}" -lt "${MAX_WAIT_SECONDS}" ]; do
+            read -r ci_status ci_conclusion <<<"$(check_ci || true)"
+            echo "CI for ${SHA}: ${ci_status:-none}/${ci_conclusion:-pending} (waited ${elapsed}s)"
+            if [ "${ci_status}" = "completed" ]; then
+              break
+            fi
+            sleep "${POLL_INTERVAL}"
+            elapsed=$((elapsed + POLL_INTERVAL))
+          done
 
           if [ "${ci_status}" = "completed" ] && [ "${ci_conclusion}" = "success" ]; then
             echo "✅ CI passed for ${SHA}"
           else
-            echo "::error::CI for commit ${SHA} is '${ci_status:-none}/${ci_conclusion:-none}', refusing to publish."
-            echo "::error::Wait for CI to pass on main, then re-run this workflow or re-tag. https://github.com/${GITHUB_REPOSITORY}/actions/workflows/ci.yml"
+            echo "::error::CI for commit ${SHA} is '${ci_status:-none}/${ci_conclusion:-pending}' after waiting ${elapsed}s, refusing to publish."
+            echo "::error::Check https://github.com/${GITHUB_REPOSITORY}/actions/workflows/ci.yml — likely a red CI run on main."
             exit 1
           fi
 
@@ -56,8 +78,6 @@ jobs:
         with:
           node-version: '24'
           package-manager-cache: false
-      - run: node --version && npm --version
-      - run: npm install -g npm@latest
       - run: node --version && npm --version
       - run: npm ci
       - name: Resolve version (bump if already published)
@@ -89,6 +109,7 @@ jobs:
   github-release:
     name: Create GitHub Release
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     needs: [publish-npm]
     permissions:
       contents: write
