@@ -3,6 +3,7 @@ import { Command } from 'commander';
 import { callDaemon } from './shared.js';
 import { fail, type GlobalFlags } from '../output.js';
 import { CloakError } from '../errors.js';
+import { validateReadPath } from '../utils/safepath.js';
 
 type GF = () => GlobalFlags;
 
@@ -25,7 +26,7 @@ export function buildCookiesCmd(g: GF): Command {
       const flags = g();
       try {
         let cookies: unknown;
-        if (opts.file) cookies = JSON.parse(readFileSync(opts.file as string, 'utf8'));
+        if (opts.file) cookies = JSON.parse(readFileSync(validateReadPath(opts.file as string), 'utf8'));
         else if (opts.json) cookies = JSON.parse(opts.json as string);
         else {
           cookies = JSON.parse(readStdin());

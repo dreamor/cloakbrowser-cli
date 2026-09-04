@@ -2,11 +2,12 @@ import type { MethodCtx, MethodFn } from './index.js';
 import { CloakError } from '../../errors.js';
 import { getDefaultContext } from '../../browser.js';
 import { optStr, reqStr } from './params.js';
+import { validateWritePath } from '../../utils/safepath.js';
 
 export const storageMethods: Record<string, MethodFn> = {
   'storage.save': async (params, ctx: MethodCtx) => {
     const sid = reqStr(params, 'session_id');
-    const path = reqStr(params, 'path');
+    const path = validateWritePath(reqStr(params, 'path'));
     const rec = ctx.registry.requireSession(sid);
     const c = await getDefaultContext(rec.handle);
     await c.storageState({ path });

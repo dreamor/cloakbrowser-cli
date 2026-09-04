@@ -3,6 +3,7 @@ import { CloakError } from '../../errors.js';
 import { launchFromResolved, getPageOrCreate } from '../../browser.js';
 import { resolveLaunchOpts, type LaunchOpts } from '../../options.js';
 import { reqStr } from './params.js';
+import { validateWritePath } from '../../utils/safepath.js';
 
 export const sessionMethods: Record<string, MethodFn> = {
   'session.new': async (params: Record<string, unknown>, ctx: MethodCtx) => {
@@ -35,7 +36,7 @@ export const sessionMethods: Record<string, MethodFn> = {
 
   'session.save_state': async (params, ctx: MethodCtx) => {
     const id = reqStr(params, 'session_id');
-    const path = reqStr(params, 'path');
+    const path = validateWritePath(reqStr(params, 'path'));
     const rec = ctx.registry.requireSession(id);
     if (rec.handle.kind !== 'context') {
       // Need a context to call storageState
