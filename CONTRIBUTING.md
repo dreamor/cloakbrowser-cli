@@ -31,6 +31,7 @@ npm run build
 | `npm test` | Run unit tests (Vitest, `tests/unit/`) |
 | `npm run test:e2e` | Run end-to-end tests (Vitest, `tests/e2e/`) |
 | `npm run test:all` | Run all tests (unit + e2e) |
+| `npm run lint` | Lint `src/` with ESLint |
 | `npm run clean` | Remove `dist/` directory |
 | `npm run prepublishOnly` | `clean` + `build` — runs automatically before `npm publish` |
 
@@ -78,7 +79,7 @@ src/
 ├── one-shot.ts             # One-shot fetch/scrape (no daemon)
 ├── options.ts              # Launch options types and CLI flags
 ├── output.ts               # Output envelope formatting
-├── errors.ts               # CloakError with 19 error codes
+├── errors.ts               # CloakError with 20 error codes
 ├── browser.ts              # CloakBrowser loader and launch logic
 ├── commands/               # Command builders (one file per domain)
 │   ├── shared.ts           # callDaemon() wrapper (@name / - resolution)

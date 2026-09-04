@@ -57,7 +57,8 @@ cloak session close @demo
 | `cloak daemon stop` | Stop and free all sessions |
 | `cloak daemon status` | Show pid, uptime, session count |
 | `cloak daemon ping` | Round-trip health check |
-| `cloak daemon methods` | List all 62 RPC methods |
+| `cloak daemon methods` | List all 63 RPC methods |
+| `cloak daemon foreground` | Run daemon attached for debugging |
 
 ### Sessions
 
@@ -71,6 +72,15 @@ cloak session close @demo
 | `cloak session alias list` | List saved aliases |
 | `cloak session alias set <name> <sid>` | Save a named alias |
 | `cloak session alias remove <name>` | Remove a saved alias |
+
+### Pages
+
+| Command | Description |
+|---------|-------------|
+| `cloak page new <sid>` | New tab in the session |
+| `cloak page list <sid>` | List tabs |
+| `cloak page close <sid> <pid>` | Close one tab |
+| `cloak page activate <sid> <pid>` | Make tab default for subsequent ops |
 
 ### Navigation
 
@@ -92,9 +102,11 @@ cloak click $SID u7
 cloak fill $SID u7 "hello"
 ```
 
+Add `--snapshot` to any navigation or interaction command to also return a compact DOM snapshot of the result (`{ clicked: "u7", snapshot: { items: [...], url, title } }`) — saves a round-trip.
+
 ### Wait / Snapshot / Frames / Batch
 
-`cloak wait <sid> [--selector] [--text] [--url] [--state visible|hidden|attached|detached] [--load-state load|networkidle] [--timeout] [--stable] [--quiet-ms <ms>]` · `sleep` · `snapshot [--compact] [--limit <n>] [--viewport-only] [--filter role=<v>|tag=<v>|name=<substring>] [--uid <uid>] [--frames]` (a11y tree with uids) · `frames` · `a11y` · `batch [--session <sid>] [--abort-on-error]` (JSON-line RPCs from stdin)
+`cloak wait <sid> [--selector] [--text] [--url] [--state visible|hidden|attached|detached] [--load-state load|networkidle] [--timeout] [--stable] [--quiet-ms <ms>]` · `sleep` · `snapshot [--compact] [--limit <n>] [--viewport-only] [--viewport-height <px>] [--filter role=<v>|tag=<v>|name=<substring>] [--uid <uid>] [--frames]` (a11y tree with uids — recommended entry point for agent reasoning) · `frames` · `a11y` (raw Playwright accessibility tree; returns `UNSUPPORTED_OPERATION` if unavailable — prefer `snapshot`) · `batch [--session <sid>] [--abort-on-error]` (JSON-line RPCs from stdin)
 
 ### Cookies / Storage
 
@@ -104,6 +116,10 @@ cloak fill $SID u7 "hello"
 
 `cloak request <sid> <url> [--method] [--header] [--body|--json|--form]`
 
+### Dialog
+
+`cloak dialog <sid> --action=accept|dismiss [--text <prompt_text>] [--timeout <ms>]` — one-shot handler for the next alert/confirm/prompt; `--timeout` bounds the wait instead of blocking the full 30s default.
+
 ### One-shot Helpers
 
 `cloak fetch <url> [opts] [--text] [--html] [--markdown] [--screenshot]` · `cloak scrape <url> --selector <sel> [--multi] [--attr]`
@@ -112,9 +128,17 @@ cloak fill $SID u7 "hello"
 
 `cloak binary install|info|update|clear-cache`
 
+### CDP Server
+
+`cloak serve [--port] [--host] [--headless true|false] [--proxy-server]` — wraps the Python `cloakserve` gateway (requires the Python install of cloakbrowser) · `cloak connect <ws_url>` — create a session attached to an existing CDP endpoint
+
 ### Self-test
 
 `cloak doctor` · `cloak test [--detector fingerprintjs|browserscan|botd|sannysoft] [--humanize] [--proxy] [--screenshot <path>] [--wait-until load|domcontentloaded|networkidle|commit] [--timeout <ms>]` • `cloak version`
+
+### Fingerprint Help
+
+`cloak fingerprint` — print all fingerprint flags with usage examples. Flags are set at session creation (`session new`) or on one-shot commands (`fetch`, `scrape`).
 
 ## Launch Options
 
@@ -182,7 +206,7 @@ printf '{"method":"page.url","params":{"session_id":"@page"}}\n{"method":"page.t
 
 ## Error Codes
 
-`BOOT_ERROR`, `INVALID_ARG`, `INVALID_JSON`, `MISSING_DEPENDENCY`, `DAEMON_NOT_RUNNING`, `DAEMON_ALREADY_RUNNING`, `DAEMON_TIMEOUT`, `SESSION_NOT_FOUND`, `PAGE_NOT_FOUND`, `BROWSER_LAUNCH_FAILED`, `NAVIGATION_FAILED`, `TIMEOUT`, `SELECTOR_NOT_FOUND`, `EVAL_FAILED`, `NETWORK_ERROR`, `IO_ERROR`, `NOT_IMPLEMENTED`, `UNSUPPORTED_OPERATION`, `INTERNAL_ERROR`
+`BOOT_ERROR`, `INVALID_ARG`, `INVALID_JSON`, `MISSING_DEPENDENCY`, `DAEMON_NOT_RUNNING`, `DAEMON_ALREADY_RUNNING`, `DAEMON_TIMEOUT`, `SESSION_NOT_FOUND`, `PAGE_NOT_FOUND`, `BROWSER_LAUNCH_FAILED`, `LICENSE_ERROR`, `NAVIGATION_FAILED`, `TIMEOUT`, `SELECTOR_NOT_FOUND`, `EVAL_FAILED`, `NETWORK_ERROR`, `IO_ERROR`, `NOT_IMPLEMENTED`, `UNSUPPORTED_OPERATION`, `INTERNAL_ERROR`
 
 ## First-time Setup
 

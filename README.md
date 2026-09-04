@@ -104,7 +104,7 @@ The envelope is stable:
 
 Add `--pretty` for human-readable colored output (auto when stdout is a TTY). Add `--quiet` to emit only `data` (without the envelope) on success.
 
-Error `code` values: `BOOT_ERROR`, `INVALID_ARG`, `INVALID_JSON`, `MISSING_DEPENDENCY`, `DAEMON_NOT_RUNNING`, `DAEMON_ALREADY_RUNNING`, `DAEMON_TIMEOUT`, `SESSION_NOT_FOUND`, `PAGE_NOT_FOUND`, `BROWSER_LAUNCH_FAILED`, `NAVIGATION_FAILED`, `TIMEOUT`, `SELECTOR_NOT_FOUND`, `EVAL_FAILED`, `NETWORK_ERROR`, `IO_ERROR`, `NOT_IMPLEMENTED`, `UNSUPPORTED_OPERATION`, `INTERNAL_ERROR`.
+Error `code` values: `BOOT_ERROR`, `INVALID_ARG`, `INVALID_JSON`, `MISSING_DEPENDENCY`, `DAEMON_NOT_RUNNING`, `DAEMON_ALREADY_RUNNING`, `DAEMON_TIMEOUT`, `SESSION_NOT_FOUND`, `PAGE_NOT_FOUND`, `BROWSER_LAUNCH_FAILED`, `LICENSE_ERROR`, `NAVIGATION_FAILED`, `TIMEOUT`, `SELECTOR_NOT_FOUND`, `EVAL_FAILED`, `NETWORK_ERROR`, `IO_ERROR`, `NOT_IMPLEMENTED`, `UNSUPPORTED_OPERATION`, `INTERNAL_ERROR`.
 
 ## Command map
 
@@ -115,7 +115,7 @@ Error `code` values: `BOOT_ERROR`, `INVALID_ARG`, `INVALID_JSON`, `MISSING_DEPEN
 | `cloak daemon stop` | Stop and free all sessions. |
 | `cloak daemon status` | pid, uptime, session count. |
 | `cloak daemon ping` | Round-trip health check. |
-| `cloak daemon methods` | List all 62 RPC methods. |
+| `cloak daemon methods` | List all 63 RPC methods. |
 | `cloak daemon foreground` | Run daemon attached for debugging. |
 
 ### Sessions
@@ -172,7 +172,7 @@ All interaction commands accept bare cloak UIDs (e.g. `cloak click @session u7` 
 `cloak request <sid> <url> [--method] [--header "Name: Value"] [--body|--json|--form key=value] [--timeout]` — fires through the session's context.request, so cookies/proxy/fingerprint match the browser.
 
 ### Dialog
-`cloak dialog <sid> --action=accept|dismiss [--text]` — install a one-shot handler for the next alert/confirm/prompt.
+`cloak dialog <sid> --action=accept|dismiss [--text <prompt_text>] [--timeout <ms>]` — install a one-shot handler for the next alert/confirm/prompt. `--timeout` bounds the wait instead of blocking the full 30s default.
 
 ### Batch
 `cloak batch [--session <sid>] [--abort-on-error]` — execute multiple daemon RPCs from stdin JSON lines. Each line: `{"method":"<rpc>","params":{..., "session_id":"<sid>"}}`. Uses a single daemon connection for all calls. Guards: max 200 lines / 1MB by default (override with `CLOAK_BATCH_MAX_LINES` / `CLOAK_BATCH_MAX_BYTES`).
@@ -302,7 +302,7 @@ cloak goto "$SID" https://example.com
        (one-shot fetch/scrape: in-process, no daemon)
 ```
 
-- 62 RPC methods on the daemon, all listed by `cloak daemon methods`.
+- 63 RPC methods on the daemon, all listed by `cloak daemon methods`.
 - One-shot mode (`fetch`, `scrape`) skips the daemon entirely for stateless requests.
 - Session idle timeout: 1 hour by default; override with `--ttl-ms` on `session new`.
 - Daemon RPC timeout: 30s default (configurable per-command via `--timeout`).
