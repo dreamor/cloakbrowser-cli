@@ -112,15 +112,31 @@ export function buildVersionCmd(g: GF, cliVersion: string): Command {
   });
 }
 
-async function readPackageVersion(pkg: string): Promise<string | undefined> {
+/**
+ * cloakbrowser's package.json restricts "exports" to ".", "./puppeteer",
+ * "./human" — no "./package.json" — so `require.resolve('cloakbrowser/package.json')`
+ * always throws ERR_PACKAGE_PATH_NOT_EXPORTED regardless of whether the
+ * package is installed. Walk the same node_modules search paths Node
+ * itself would use to find the package *directory*, then read its
+ * package.json directly as a plain file (not as a resolved export).
+ */
+export async function readPackageVersion(pkg: string): Promise<string | undefined> {
   try {
     const { readFile } = await import('node:fs/promises');
     const { createRequire } = await import('node:module');
+    const { join } = await import('node:path');
     const req = createRequire(import.meta.url);
-    const pkgPath = req.resolve(`${pkg}/package.json`);
-    const raw = await readFile(pkgPath, 'utf8');
-    const json = JSON.parse(raw) as { version?: string };
-    return json.version;
+    const candidateDirs = req.resolve.paths(pkg) ?? [];
+    for (const dir of candidateDirs) {
+      try {
+        const raw = await readFile(join(dir, pkg, 'package.json'), 'utf8');
+        const json = JSON.parse(raw) as { version?: string };
+        if (json.version) return json.version;
+      } catch {
+        continue;
+      }
+    }
+    return undefined;
   } catch {
     return undefined;
   }

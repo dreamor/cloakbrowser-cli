@@ -45,4 +45,18 @@ describe('daemon e2e (RPC plumbing)', () => {
   it('returns structured error for missing required param', async () => {
     await expect(getClient().call('session.info', {})).rejects.toMatchObject({ code: 'INVALID_ARG' });
   });
+
+  it('session.connect fails fast on a dead CDP endpoint instead of launching an unrelated browser', async () => {
+    // Regression: the old `cloak connect` implementation passed the ws_url
+    // as a bogus `--remote-debugging-url` launch arg to a brand new
+    // `cb.launch()`, which Chromium just ignored — so connecting to a
+    // completely dead port used to "succeed" in ~1s with a fresh,
+    // unrelated browser instead of failing. session.connect must actually
+    // attempt a CDP connection and reject when nothing is listening.
+    const start = Date.now();
+    await expect(
+      getClient().call('session.connect', { ws_url: 'http://127.0.0.1:19998', timeout_ms: 3000 })
+    ).rejects.toMatchObject({ code: 'NETWORK_ERROR' });
+    expect(Date.now() - start).toBeLessThan(9000);
+  }, 15_000);
 });

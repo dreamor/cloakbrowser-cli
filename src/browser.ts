@@ -125,6 +125,7 @@ export type LaunchedHandle =
 
 export async function launchFromResolved(resolved: ResolvedLaunchOpts): Promise<LaunchedHandle> {
   const cb = await loadCloakBrowser();
+  warnIfBinaryMissing(cb);
 
   if (resolved.persistentDir) {
     if (!cb.launchPersistentContext) {
@@ -133,12 +134,12 @@ export async function launchFromResolved(resolved: ResolvedLaunchOpts): Promise<
         "Installed cloakbrowser does not expose launchPersistentContext (need cloakbrowser >= 0.5.2)"
       );
     }
-    const ctx = await cb.launchPersistentContext(resolved.persistentDir, resolved.launchOptions);
+    const ctx = await withCloakbrowserStdoutRerouted(() => cb.launchPersistentContext!(resolved.persistentDir!, resolved.launchOptions));
     return { kind: 'context', context: ctx, close: () => ctx.close() };
   }
 
   if (resolved.wantsContext && cb.launchContext) {
-    const ctx = await cb.launchContext(resolved.launchOptions);
+    const ctx = await withCloakbrowserStdoutRerouted(() => cb.launchContext!(resolved.launchOptions));
     return {
       kind: 'context',
       context: ctx,
@@ -150,8 +151,91 @@ export async function launchFromResolved(resolved: ResolvedLaunchOpts): Promise<
     };
   }
 
-  const browser = await cb.launch(resolved.launchOptions);
+  const browser = await withCloakbrowserStdoutRerouted(() => cb.launch(resolved.launchOptions));
   return { kind: 'browser', browser, close: () => browser.close() };
+}
+
+/**
+ * Attach to an already-running browser's CDP endpoint (`--remote-debugging-port`
+ * or a `ws://.../devtools/browser/<id>` URL). This is a genuine remote-attach,
+ * unlike `cb.launch()` — closing the returned handle only disconnects, it
+ * doesn't kill a browser this process didn't start.
+ *
+ * cloakbrowser doesn't expose a connect API (it only launches), so this goes
+ * straight to playwright-core's `chromium.connectOverCDP`, which also gives
+ * us a real connection timeout instead of hanging indefinitely on a dead port.
+ */
+export async function connectOverCdp(url: string, timeoutMs = 10_000): Promise<LaunchedHandle> {
+  let chromium: { connectOverCDP: (endpoint: string, opts?: unknown) => Promise<AnyBrowser> };
+  try {
+    ({ chromium } = (await import('playwright-core')) as unknown as {
+      chromium: { connectOverCDP: (endpoint: string, opts?: unknown) => Promise<AnyBrowser> };
+    });
+  } catch (err) {
+    throw new CloakError(
+      'MISSING_DEPENDENCY',
+      "Cannot load 'playwright-core'. Install with: npm install playwright-core",
+      { cause: (err as Error).message }
+    );
+  }
+  let browser: AnyBrowser;
+  try {
+    browser = await chromium.connectOverCDP(url, { timeout: timeoutMs });
+  } catch (err) {
+    throw new CloakError('NETWORK_ERROR', `Failed to connect to CDP endpoint ${url}: ${(err as Error).message}`);
+  }
+  return { kind: 'browser', browser, close: () => browser.close() };
+}
+
+/**
+ * `cb.launch()`/`launchContext()`/`launchPersistentContext()` silently
+ * block on a synchronous ~200MB Chromium download the first time, with no
+ * progress output — an agent watching stdout for a JSON response sees
+ * nothing and has no way to tell "slow download" apart from "hung
+ * process". This is a one-line, best-effort stderr heads-up (never
+ * throws, never blocks) so that distinction is visible; it doesn't (and
+ * can't, from out here) add a real progress bar to cloakbrowser's own
+ * downloader.
+ */
+function warnIfBinaryMissing(cb: CloakModule): void {
+  try {
+    const info = cb.binaryInfo?.() as { installed?: boolean } | undefined;
+    if (info?.installed === false) {
+      process.stderr.write(
+        'cloak: stealth Chromium binary not installed yet — downloading now (~200MB, one-time, will block until done). ' +
+        'Pre-download ahead of time with `cloak binary install` to avoid this on the first real call.\n'
+      );
+    }
+  } catch {
+    // best-effort only — never let a binaryInfo() failure block a launch
+  }
+}
+
+/**
+ * cloakbrowser's own binary-download progress ("[cloakbrowser] Stealth
+ * Chromium ... Downloading...") writes straight to process.stdout, which
+ * would land in the middle of this CLI's "stdout is exactly one JSON
+ * envelope" contract on a first install and break any agent doing
+ * `JSON.parse(stdout)`. Reroute anything with that prefix to stderr for
+ * the duration of the call — always restoring the original writer, even
+ * if the call throws.
+ */
+export async function withCloakbrowserStdoutRerouted<T>(fn: () => Promise<T>): Promise<T> {
+  const original = process.stdout.write;
+  const patched = (...args: unknown[]): boolean => {
+    const [chunk] = args;
+    const text = typeof chunk === 'string' ? chunk : Buffer.isBuffer(chunk) ? chunk.toString('utf8') : '';
+    if (text.startsWith('[cloakbrowser]')) {
+      return (process.stderr.write as (...a: unknown[]) => boolean).apply(process.stderr, args);
+    }
+    return (original as (...a: unknown[]) => boolean).apply(process.stdout, args);
+  };
+  process.stdout.write = patched as typeof process.stdout.write;
+  try {
+    return await fn();
+  } finally {
+    process.stdout.write = original;
+  }
 }
 
 export async function getPageOrCreate(handle: LaunchedHandle): Promise<AnyPage> {

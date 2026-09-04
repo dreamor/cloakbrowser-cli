@@ -1,6 +1,6 @@
 import type { MethodCtx, MethodFn } from './index.js';
 import { CloakError } from '../../errors.js';
-import { launchFromResolved, getPageOrCreate } from '../../browser.js';
+import { launchFromResolved, getPageOrCreate, connectOverCdp } from '../../browser.js';
 import { resolveLaunchOpts, type LaunchOpts } from '../../options.js';
 import { reqStr } from './params.js';
 import { validateWritePath } from '../../utils/safepath.js';
@@ -15,6 +15,20 @@ export const sessionMethods: Record<string, MethodFn> = {
     const rec = ctx.registry.registerSession(handle, { launch: resolved.launchOptions, persistent: resolved.persistentDir ?? null }, ttlMs);
 
     // Auto-create one page so the agent can start operating immediately
+    const page = await getPageOrCreate(handle);
+    const pageId = ctx.registry.registerPage(rec.id, page);
+
+    return { session_id: rec.id, page_id: pageId };
+  },
+
+  'session.connect': async (params: Record<string, unknown>, ctx: MethodCtx) => {
+    const wsUrl = reqStr(params, 'ws_url');
+    const timeoutMs = typeof params.timeout_ms === 'number' ? params.timeout_ms : undefined;
+    const ttlMs = typeof params.ttl_ms === 'number' ? params.ttl_ms : undefined;
+
+    const handle = await connectOverCdp(wsUrl, timeoutMs);
+    const rec = ctx.registry.registerSession(handle, { connected: wsUrl }, ttlMs);
+
     const page = await getPageOrCreate(handle);
     const pageId = ctx.registry.registerPage(rec.id, page);
 
