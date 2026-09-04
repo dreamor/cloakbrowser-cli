@@ -17,7 +17,11 @@ export type SnapshotFilterOpts = {
   limit?: number;
   /** Only include elements whose bbox.y is within the viewport */
   viewportOnly?: boolean;
-  /** Viewport height in px (required when viewportOnly is true for effective filtering) */
+  /**
+   * Viewport height in px. Optional: when omitted the caller is expected to
+   * fill it in from the live viewport (page.snapshot falls back to
+   * page.viewportSize().height), so `--viewport-only` alone still filters.
+   */
   viewportHeight?: number;
   /** Filter by attribute: "role=<value>", "tag=<value>", or "name=<substring>" */
   filter?: string;
@@ -55,9 +59,11 @@ export function resolveUid(sel: string): string {
 }
 
 /**
- * Post-process a snapshot result: apply compact (strip bbox/selector), viewportOnly,
- * filter by role/tag/name, uid, and/or limit.
- * Filters are applied in order: compact → viewportOnly → filter → uid → limit
+ * Post-process a snapshot result: apply viewportOnly, filter by role/tag/name,
+ * uid, and/or limit, and optionally compact (strip bbox/selector).
+ * Compact runs *last* so the spatial viewportOnly filter still has `bbox`
+ * available — running it first made `--compact --viewport-only` return 0
+ * items (every item's bbox was already stripped when the filter checked it).
  * @returns The filtered items array.
  */
 export function filterSnapshot(
@@ -65,11 +71,6 @@ export function filterSnapshot(
   opts: SnapshotFilterOpts,
 ): SnapshotItem[] {
   let items = snapshot.items;
-
-  if (opts.compact) {
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    items = items.map(({ bbox: _b, selector: _s, ...rest }) => rest);
-  }
 
   if (opts.viewportOnly && opts.viewportHeight !== undefined) {
     const vh = opts.viewportHeight;
@@ -97,6 +98,12 @@ export function filterSnapshot(
 
   if (opts.limit !== undefined && opts.limit >= 0 && opts.limit < items.length) {
     items = items.slice(0, opts.limit);
+  }
+
+  // Last, after every filter that needs bbox/selector — see the doc comment.
+  if (opts.compact) {
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    items = items.map(({ bbox: _b, selector: _s, ...rest }) => rest);
   }
 
   return items;

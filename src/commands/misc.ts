@@ -48,7 +48,7 @@ export function buildSnapshotCmd(g: GF): Command {
     .option('--compact', 'Omit bbox and selector from each element (lighter output)')
     .option('--limit <n>', 'Max number of elements to return')
     .option('--viewport-only', 'Only include elements visible in the viewport')
-    .option('--viewport-height <px>', 'Viewport height for viewport-only filtering')
+    .option('--viewport-height <px>', 'Override viewport height for --viewport-only (default: the live viewport)')
     .option('--filter <expr>', 'Filter by role=<v>, tag=<v>, or name=<substring>')
     .option('--uid <uid>', 'Return only the element with this exact uid')
     .option('--frames', 'Include elements from same-origin iframes')

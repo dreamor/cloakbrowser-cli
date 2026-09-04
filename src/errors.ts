@@ -52,6 +52,22 @@ export function fromUnknown(err: unknown): CloakError {
     }
     // Map known Playwright/cloakbrowser errors
     const msg = err.message;
+    // Some cloakbrowser builds throw a *plain* Error for license problems —
+    // the plan info lives in the message, not the error name — so also catch
+    // the message shape here. Without this, a bogus --license-key surfaced
+    // as INTERNAL_ERROR despite LICENSE_ERROR already existing.
+    if (/CloakBrowser Pro: license/i.test(msg)) {
+      return new CloakError('LICENSE_ERROR', msg);
+    }
+    // cloakbrowser's download layer throws "Download failed: HTTP <status>".
+    // A 404 means the pinned --browser-version doesn't exist — a caller
+    // mistake; other statuses are transient CDN/network problems.
+    if (/Download failed: HTTP 404/i.test(msg)) {
+      return new CloakError('INVALID_ARG', msg);
+    }
+    if (/Download failed/i.test(msg)) {
+      return new CloakError('NETWORK_ERROR', msg);
+    }
     if (/Timeout .* exceeded/i.test(msg)) {
       return new CloakError('TIMEOUT', msg);
     }

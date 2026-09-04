@@ -75,4 +75,21 @@ describe('fromUnknown', () => {
     const e = new Error('keyboard.press: Unknown key: "NotARealKey"');
     expect(fromUnknown(e).code).toBe('INVALID_ARG');
   });
+
+  it('maps a plain license error (no CloakBrowserLicenseError name) to LICENSE_ERROR', () => {
+    const e = new Error('CloakBrowser Pro: license key is invalid or expired (plan=unknown)');
+    const mapped = fromUnknown(e);
+    expect(mapped.code).toBe('LICENSE_ERROR');
+    expect(mapped.message).toContain('plan=unknown');
+  });
+
+  it('maps Download failed HTTP 404 (bad --browser-version) to INVALID_ARG', () => {
+    const e = new Error('Download failed: HTTP 404');
+    expect(fromUnknown(e).code).toBe('INVALID_ARG');
+  });
+
+  it('maps other Download failed errors to NETWORK_ERROR', () => {
+    expect(fromUnknown(new Error('Download failed: HTTP 503')).code).toBe('NETWORK_ERROR');
+    expect(fromUnknown(new Error('Download failed: connection reset')).code).toBe('NETWORK_ERROR');
+  });
 });

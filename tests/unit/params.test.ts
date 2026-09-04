@@ -268,6 +268,21 @@ describe('filterSnapshot', () => {
       expect(r.length).toBe(1);
       expect(r[0].uid).toBe('u3');
     });
+
+    it('viewportOnly + compact together still filters (compact runs after the bbox check)', () => {
+      // Regression: compact used to strip bbox *before* viewportOnly ran,
+      // making the combination return 0 items.
+      const r = filterSnapshot({ items: sample, url: '', title: '' }, {
+        compact: true,
+        viewportOnly: true,
+        viewportHeight: 150,
+      });
+      expect(r.map(i => i.uid)).toEqual(['u1', 'u3', 'u4', 'u5']);
+      for (const item of r) {
+        expect(item.bbox).toBeUndefined();
+        expect(item.selector).toBeUndefined();
+      }
+    });
   });
 });
 

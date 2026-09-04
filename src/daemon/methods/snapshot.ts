@@ -25,9 +25,14 @@ export const snapshotMethods: Record<string, MethodFn> = {
     if (typeof params.limit === 'number') filterOpts.limit = params.limit;
     if (typeof params.viewport_only === 'boolean') {
       filterOpts.viewportOnly = params.viewport_only;
+      // Fall back to the live viewport so `--viewport-only` without an
+      // explicit height still filters (used to be a silent no-op). AnyPage
+      // is a loose union, so probe defensively like page.press does.
+      const vpFn = (ref.page as unknown as { viewportSize?: () => { height: number } | null }).viewportSize;
+      const live = typeof vpFn === 'function' ? vpFn.call(ref.page) : null;
       filterOpts.viewportHeight = typeof params.viewport_height === 'number'
         ? params.viewport_height
-        : undefined;
+        : live?.height;
     }
     if (typeof params.filter === 'string') filterOpts.filter = params.filter;
     if (typeof params.uid === 'string' && params.uid) filterOpts.uid = params.uid;

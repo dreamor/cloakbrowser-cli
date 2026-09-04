@@ -1,4 +1,5 @@
 import type { MethodCtx, MethodFn } from './index.js';
+import { CloakError } from '../../errors.js';
 import { getDefaultContext } from '../../browser.js';
 import { optStr, reqStr } from './params.js';
 
@@ -47,9 +48,13 @@ export const networkMethods: Record<string, MethodFn> = {
   'network.recent': async (params, ctx: MethodCtx) => {
     void params;
     void ctx;
-    return {
-      requests: [],
-      note: 'network.recent is not implemented yet; use page.eval with performance.getEntriesByType("resource") for a snapshot',
-    };
+    // An unimplemented method must not report ok:true with empty data — an
+    // agent reads that as "no requests were made". Fail loudly instead, the
+    // same way storage.load does, so callers know to use the workaround.
+    throw new CloakError(
+      'NOT_IMPLEMENTED',
+      'network.recent is not implemented yet. Use page.eval with '
+      + 'performance.getEntriesByType("resource") for a snapshot instead.'
+    );
   },
 };
