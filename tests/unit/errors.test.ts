@@ -65,4 +65,14 @@ describe('fromUnknown', () => {
   it('handles non-Error values', () => {
     expect(fromUnknown('something').code).toBe('INTERNAL_ERROR');
   });
+
+  it('maps browser launch failures to BROWSER_LAUNCH_FAILED', () => {
+    expect(fromUnknown(new Error('Failed to launch the browser process! spawn ENOENT')).code).toBe('BROWSER_LAUNCH_FAILED');
+    expect(fromUnknown(new Error('Failed to launch "chrome" channel.')).code).toBe('BROWSER_LAUNCH_FAILED');
+  });
+
+  it('maps an unrecognized keyboard key name to INVALID_ARG', () => {
+    const e = new Error('keyboard.press: Unknown key: "NotARealKey"');
+    expect(fromUnknown(e).code).toBe('INVALID_ARG');
+  });
 });

@@ -55,6 +55,20 @@ export function fromUnknown(err: unknown): CloakError {
     if (/Timeout .* exceeded/i.test(msg)) {
       return new CloakError('TIMEOUT', msg);
     }
+    // Playwright's own browser-launch failures ("Failed to launch the
+    // browser process", "... because executable doesn't exist at ...",
+    // `Failed to launch "chrome" channel.`) all consistently include this
+    // substring. Previously fell through to INTERNAL_ERROR even though
+    // BROWSER_LAUNCH_FAILED was already a defined code nothing ever mapped to.
+    if (/Failed to launch/i.test(msg)) {
+      return new CloakError('BROWSER_LAUNCH_FAILED', msg);
+    }
+    // `keyboard.press`/`locator.press` reject with this exact shape for an
+    // unrecognized key name — that's a caller mistake (bad --key value),
+    // not an internal fault.
+    if (/Unknown key:/i.test(msg)) {
+      return new CloakError('INVALID_ARG', msg);
+    }
     // cloakbrowser's humanize layer (`human/actionability.ts`) throws
     // ElementNot{Attached,Visible,Stable,Enabled,Editable,ReceivingEvents}Error /
     // ElementTargetChangedError with the shape `Element "sel" failed <check> check: ...`.
