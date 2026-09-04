@@ -108,6 +108,26 @@ describe('resolveLaunchOpts', () => {
     ).toThrow(/stable.*preview/);
   });
 
+  it('maps light/dark color schemes and flags context mode', () => {
+    expect(resolveLaunchOpts({ colorScheme: 'dark' }).launchOptions.colorScheme).toBe('dark');
+    expect(resolveLaunchOpts({ colorScheme: 'light' }).launchOptions.colorScheme).toBe('light');
+    expect(resolveLaunchOpts({ colorScheme: 'dark' }).wantsContext).toBe(true);
+  });
+
+  it('rejects --color-scheme=no-preference with UNSUPPORTED_OPERATION (Chromium removed no-preference)', () => {
+    // CSS removed prefers-color-scheme: no-preference; Chromium reports 'light'
+    // for it, so Playwright's colorScheme: 'no-preference' is a silent alias.
+    try {
+      resolveLaunchOpts({ colorScheme: 'no-preference' });
+      expect.unreachable('should have thrown');
+    } catch (e: unknown) {
+      const err = e as { code?: string; message?: string };
+      expect(err.code).toBe('UNSUPPORTED_OPERATION');
+      expect(err.message).toContain('--color-scheme=no-preference');
+      expect(err.message).toContain('no-preference');
+    }
+  });
+
   it('rejects --extension with UNSUPPORTED_OPERATION (Chromium 137+ removed side-loading)', () => {
     // Verified against cloakbrowser Chromium 146 AND stock Chrome: --load-extension
     // reaches the browser process but extensions never load, headful or not.

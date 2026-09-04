@@ -142,6 +142,20 @@ export function resolveLaunchOpts(opts: LaunchOpts): ResolvedLaunchOpts {
   if (opts.userAgent) launchOptions.userAgent = opts.userAgent;
   if (opts.locale) launchOptions.locale = opts.locale;
   if (opts.timezone) launchOptions.timezoneId = opts.timezone;
+  if (opts.colorScheme === 'no-preference') {
+    // `prefers-color-scheme: no-preference` was removed from the CSS Media
+    // Queries 5 spec. Chromium no longer represents "no preference" — it
+    // reports `light` — so Playwright's `colorScheme: 'no-preference'`
+    // silently degrades to light as well. Fail loudly instead of accepting
+    // a value that can only ever be a silent alias for 'light'.
+    throw new CloakError(
+      'UNSUPPORTED_OPERATION',
+      "--color-scheme=no-preference is not supported: Chromium no longer "
+        + 'distinguishes no-preference (CSS removed prefers-color-scheme: '
+        + "no-preference; it reports 'light'). Omit the flag to get the "
+        + 'default light behavior.'
+    );
+  }
   if (opts.colorScheme) launchOptions.colorScheme = opts.colorScheme;
   if (opts.storageState) contextOptions.storageState = opts.storageState;
   if (opts.extraHeaders) {
@@ -249,7 +263,7 @@ export const LAUNCH_OPTION_DEFS: readonly CliOptionDef[] = [
   { flags: '--device-memory <n>', description: 'navigator.deviceMemory (GB)' },
   { flags: '--screen <WxH>', description: 'Spoofed screen size' },
   { flags: '--webrtc-ip <ip>', description: 'WebRTC ICE candidate IP (auto|<ip>)' },
-  { flags: '--color-scheme <name>', description: 'Color scheme (light|dark|no-preference; no-preference currently behaves as light — Chromium limitation)' },
+  { flags: '--color-scheme <name>', description: 'Color scheme (light|dark; "no-preference" is not supported — Chromium removed prefers-color-scheme: no-preference)' },
   { flags: '--persistent <dir>', description: 'Use persistent user data dir (cookies/state survive)' },
   { flags: '--storage-state <path>', description: 'Load storage state from JSON file' },
   { flags: '--extra-headers <json>', description: 'Extra HTTP headers as JSON object' },

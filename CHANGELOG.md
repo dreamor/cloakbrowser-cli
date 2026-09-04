@@ -5,6 +5,12 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Changed
+
+- **`--color-scheme=no-preference` now fails fast with `UNSUPPORTED_OPERATION`** (same treatment as `--extension` in 0.5.9) instead of silently behaving as `light`. Same class of upstream limitation: CSS removed `prefers-color-scheme: no-preference` and Chromium no longer represents "no preference" — it reports `light`, and Playwright's `colorScheme: 'no-preference'` degrades to `light` as well, so there is no way to express it. `--color-scheme` now documents `light|dark` only (help text updated).
+
 ## [0.5.9] - 2026-09-04
 
 ### Fixed
