@@ -90,7 +90,12 @@ function detectorUrl(name: string): string {
   switch (name) {
     case 'fingerprintjs': return 'https://demo.fingerprint.com/playground';
     case 'browserscan': return 'https://www.browserscan.net/';
-    case 'botd': return 'https://fingerprint.com/products/bot-detection/';
+    // FingerprintJS's standalone open-source BotD demo page no longer
+    // resolves (github.io/demo.fingerprint.com paths for it all 404 as of
+    // this writing). The playground above already reports a bot-detection
+    // verdict, so point --detector=botd at the same working page instead
+    // of what used to be a marketing page with no actual test on it.
+    case 'botd': return 'https://demo.fingerprint.com/playground';
     case 'sannysoft': return 'https://bot.sannysoft.com/';
     default: return name;
   }

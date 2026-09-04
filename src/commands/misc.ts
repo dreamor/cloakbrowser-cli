@@ -136,11 +136,13 @@ export function buildDialogCmd(g: GF): Command {
     .requiredOption('--action <name>', 'accept|dismiss')
     .option('--text <text>', 'Prompt response (only for accept)')
     .option('--page <id>')
+    .option('--timeout <ms>', 'Wait at most this long for the dialog to appear (default: 30000)')
     .action(async (sid: string, opts: Record<string, unknown>) => {
       const flags = g();
       const params: Record<string, unknown> = { action: opts.action };
       if (opts.text) params.text = opts.text;
       if (opts.page) params.page_id = opts.page;
+      if (opts.timeout) params.timeout = Number(opts.timeout);
       await callDaemon('dialog.handle_next', params, sid, flags);
     });
 }
