@@ -47,7 +47,6 @@ describe('resolveLaunchOpts', () => {
   it('flags context-mode when context-level opts set', () => {
     expect(resolveLaunchOpts({ userAgent: 'X' }).wantsContext).toBe(true);
     expect(resolveLaunchOpts({ storageState: '/x.json' }).wantsContext).toBe(true);
-    expect(resolveLaunchOpts({ extensions: ['/p'] }).wantsContext).toBe(true);
   });
 
   it('returns persistentDir when --persistent given', () => {
@@ -109,10 +108,17 @@ describe('resolveLaunchOpts', () => {
     ).toThrow(/stable.*preview/);
   });
 
-  it('forwards extensions as camelCase extensionPaths (not snake_case)', () => {
-    const r = resolveLaunchOpts({ extensions: ['/abs/ext-a', '/abs/ext-b'] });
-    expect(r.launchOptions.extensionPaths).toEqual(['/abs/ext-a', '/abs/ext-b']);
-    expect(r.launchOptions.extension_paths).toBeUndefined();
+  it('rejects --extension with UNSUPPORTED_OPERATION (Chromium 137+ removed side-loading)', () => {
+    // Verified against cloakbrowser Chromium 146 AND stock Chrome: --load-extension
+    // reaches the browser process but extensions never load, headful or not.
+    try {
+      resolveLaunchOpts({ extensions: ['/tmp/any-ext'] });
+      expect.unreachable('should have thrown');
+    } catch (e: unknown) {
+      const err = e as { code?: string; message?: string };
+      expect(err.code).toBe('UNSUPPORTED_OPERATION');
+      expect(err.message).toContain('--load-extension');
+    }
   });
 
   it('emits --fingerprint-noise=false only when explicitly disabled', () => {

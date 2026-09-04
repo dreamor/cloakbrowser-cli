@@ -79,6 +79,13 @@ export function fromUnknown(err: unknown): CloakError {
     if (/Failed to launch/i.test(msg)) {
       return new CloakError('BROWSER_LAUNCH_FAILED', msg);
     }
+    // Playwright also reports an aborted browser *startup* (e.g. --no-headless
+    // on a machine with no display) as "browserType.launch: Target page,
+    // context or browser has been closed" — the browser died while starting,
+    // not an internal fault of this CLI.
+    if (/browserType\.launch/i.test(msg)) {
+      return new CloakError('BROWSER_LAUNCH_FAILED', msg);
+    }
     // `keyboard.press`/`locator.press` reject with this exact shape for an
     // unrecognized key name — that's a caller mistake (bad --key value),
     // not an internal fault.

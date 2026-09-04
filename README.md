@@ -203,7 +203,7 @@ Every CloakBrowser launch flag is exposed:
 - **Identity / fingerprint**: `--fingerprint <seed>` (deterministic), `--platform windows|macos|linux`, `--platform-version`, `--brand`, `--brand-version`, `--gpu-vendor`, `--gpu-renderer`, `--hardware-concurrency`, `--device-memory`, `--screen WxH`, `--webrtc-ip auto|<ip>`
 - **Locale / display**: `--timezone`, `--locale`, `--user-agent`, `--viewport WxH`, `--color-scheme light|dark`
 - **Humanize**: `--humanize`, `--humanize-preset careful|default|fast`, `--humanize-config <json>`
-- **Context-level**: `--storage-state <path>`, `--extra-headers <json>`, `--permissions <json>`, `--extension <path>` (repeatable)
+- **Context-level**: `--storage-state <path>`, `--extra-headers <json>`, `--permissions <json>`, `--extension <path>` (⚠️ currently non-functional: Chromium 137+ removed `--load-extension` side-loading — CLI fails fast with UNSUPPORTED_OPERATION)
 - **Misc**: `--extra-args <json>` (extra Chromium args), `--slow-mo <ms>`, `--timeout <ms>`
 - **Pro**: `--license-key <key>` (or `CLOAKBROWSER_LICENSE_KEY` env), `--browser-version <version>` (pin Chromium build, e.g. `148.0.7778.215.5`)
 

@@ -5,6 +5,14 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Fixed
+
+- **`--extension` now fails fast with `UNSUPPORTED_OPERATION`** instead of silently doing nothing. Root cause is upstream: Chromium 137+ removed command-line extension side-loading entirely. Verified against cloakbrowser's Chromium 146 AND stock Chrome — `--load-extension`/`--disable-extensions-except` reach the browser process, Playwright's `--disable-extensions` default is stripped, the `DisableLoadExtensionCommandLineSwitch` feature is disabled, headful with a persistent profile — and extensions still never load. Pre-installing into a `--persistent` profile via `chrome://extensions` remains the supported path.
+- **`--no-headless` on a machine with no display** now maps to `BROWSER_LAUNCH_FAILED` (Playwright reports the aborted startup as `browserType.launch: Target page, context or browser has been closed`, which slipped past the `Failed to launch` pattern).
+- **Help/wording accuracy** — `cloak dialog` help now states it blocks until a dialog appears or `--timeout` elapses (the flag existed but the blocking semantics were undocumented); `--timeout` on launch commands is documented as the *browser launch timeout* (that is what cloakbrowser forwards it to); `--color-scheme=no-preference` notes it currently behaves as `light` (Chromium limitation).
+
 ## [0.5.8] - 2026-09-04
 
 Top-to-bottom correctness pass against a real stealth browser session: five root-cause clusters, verified end-to-end where a browser is required.

@@ -71,6 +71,11 @@ describe('fromUnknown', () => {
     expect(fromUnknown(new Error('Failed to launch "chrome" channel.')).code).toBe('BROWSER_LAUNCH_FAILED');
   });
 
+  it('maps an aborted browser startup (no display, --no-headless) to BROWSER_LAUNCH_FAILED', () => {
+    const e = new Error('browserType.launch: Target page, context or browser has been closed');
+    expect(fromUnknown(e).code).toBe('BROWSER_LAUNCH_FAILED');
+  });
+
   it('maps an unrecognized keyboard key name to INVALID_ARG', () => {
     const e = new Error('keyboard.press: Unknown key: "NotARealKey"');
     expect(fromUnknown(e).code).toBe('INVALID_ARG');

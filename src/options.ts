@@ -151,9 +151,22 @@ export function resolveLaunchOpts(opts: LaunchOpts): ResolvedLaunchOpts {
     contextOptions.permissions = parseJsonArg<string[]>(opts.permissions, 'permissions');
   }
   if (opts.extensions && opts.extensions.length > 0) {
-    // CloakBrowser JS wrapper only reads camelCase `extensionPaths`; the
-    // snake_case `extension_paths` (Python API name) is silently ignored.
-    launchOptions.extensionPaths = opts.extensions;
+    // Verified against cloakbrowser's Chromium 146 AND stock Chrome: the args
+    // reached the browser process (--load-extension + --disable-extensions-except,
+    // with Playwright's --disable-extensions default stripped via
+    // ignoreDefaultArgs and the DisableLoadExtensionCommandLineSwitch feature
+    // disabled), yet content scripts never injected. Chromium 137+ removed
+    // command-line extension side-loading entirely — headful, headless,
+    // persistent profile, all dead. Fail loudly instead of accepting config
+    // that can only ever be a silent no-op. Pre-installing into a --persistent
+    // profile via chrome://extensions still works; the prefs are MAC-protected
+    // so we can't do that registration for the user.
+    throw new CloakError(
+      'UNSUPPORTED_OPERATION',
+      '--extension is not supported: Chromium 137+ removed command-line extension '
+      + 'loading (--load-extension is ignored even headful with --persistent). '
+      + 'Pre-install the extension into a --persistent profile via chrome://extensions instead.'
+    );
   }
   if (opts.slowMo !== undefined) {
     rawLaunchOptions.slowMo = parseInteger(opts.slowMo, 'slow-mo');
@@ -186,8 +199,9 @@ export function resolveLaunchOpts(opts: LaunchOpts): ResolvedLaunchOpts {
       opts.colorScheme ||
       opts.storageState ||
       opts.extraHeaders ||
-      opts.permissions ||
-      (opts.extensions && opts.extensions.length > 0)
+      opts.permissions
+    // (opts.extensions removed: --extension now throws UNSUPPORTED_OPERATION
+    // before this point — Chromium 137+ dropped command-line side-loading.)
   );
 
   const resolved: ResolvedLaunchOpts = { launchOptions, wantsContext };
@@ -235,16 +249,16 @@ export const LAUNCH_OPTION_DEFS: readonly CliOptionDef[] = [
   { flags: '--device-memory <n>', description: 'navigator.deviceMemory (GB)' },
   { flags: '--screen <WxH>', description: 'Spoofed screen size' },
   { flags: '--webrtc-ip <ip>', description: 'WebRTC ICE candidate IP (auto|<ip>)' },
-  { flags: '--color-scheme <name>', description: 'Color scheme (light|dark|no-preference)' },
+  { flags: '--color-scheme <name>', description: 'Color scheme (light|dark|no-preference; no-preference currently behaves as light — Chromium limitation)' },
   { flags: '--persistent <dir>', description: 'Use persistent user data dir (cookies/state survive)' },
   { flags: '--storage-state <path>', description: 'Load storage state from JSON file' },
   { flags: '--extra-headers <json>', description: 'Extra HTTP headers as JSON object' },
   { flags: '--permissions <json>', description: 'Permissions array as JSON' },
-  { flags: '--extension <path>', description: 'Load a Chrome extension; repeatable', parser: collect, defaultValue: [] },
+  { flags: '--extension <path>', description: 'Load a Chrome extension (currently UNSUPPORTED: Chromium 137+ removed --load-extension side-loading)', parser: collect, defaultValue: [] },
   { flags: '--extra-args <json>', description: 'Extra Chromium args as JSON array' },
   { flags: '--channel <name>', description: 'Chromium channel override' },
   { flags: '--slow-mo <ms>', description: 'Slow down operations by N ms' },
-  { flags: '--timeout <ms>', description: 'Default operation timeout' },
+  { flags: '--timeout <ms>', description: 'Browser launch timeout (ms)' },
 ];
 
 export function attachLaunchOptions(cmd: Command): Command {

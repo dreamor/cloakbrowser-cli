@@ -132,7 +132,7 @@ export function buildRequestCmd(g: GF): Command {
 }
 
 export function buildDialogCmd(g: GF): Command {
-  return new Command('dialog').description('Handle the next alert/confirm/prompt dialog').argument('<session_id>')
+  return new Command('dialog').description('Handle the next alert/confirm/prompt dialog (blocks until one appears or --timeout elapses)').argument('<session_id>')
     .requiredOption('--action <name>', 'accept|dismiss')
     .option('--text <text>', 'Prompt response (only for accept)')
     .option('--page <id>')
