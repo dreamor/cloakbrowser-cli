@@ -86,7 +86,11 @@ export type AnyRequest = {
 type CloakModule = {
   launch: (opts?: unknown) => Promise<AnyBrowser>;
   launchContext?: (opts?: unknown) => Promise<AnyContext>;
-  launchPersistentContext?: (userDataDir: string, opts?: unknown) => Promise<AnyContext>;
+  // Real signature is a single options object with `userDataDir` merged in
+  // — NOT `(userDataDir, opts)`. Confirmed empirically: the 2-arg form
+  // throws `The "path" argument must be of type string. Received undefined`
+  // because cloakbrowser reads `options.userDataDir`, not a first positional arg.
+  launchPersistentContext?: (opts: Record<string, unknown>) => Promise<AnyContext>;
   ensureBinary?: () => Promise<string>;
   binaryInfo?: () => unknown;
   clearCache?: () => unknown;
@@ -134,7 +138,9 @@ export async function launchFromResolved(resolved: ResolvedLaunchOpts): Promise<
         "Installed cloakbrowser does not expose launchPersistentContext (need cloakbrowser >= 0.5.2)"
       );
     }
-    const ctx = await withCloakbrowserStdoutRerouted(() => cb.launchPersistentContext!(resolved.persistentDir!, resolved.launchOptions));
+    const ctx = await withCloakbrowserStdoutRerouted(() =>
+      cb.launchPersistentContext!({ ...resolved.launchOptions, userDataDir: resolved.persistentDir })
+    );
     return { kind: 'context', context: ctx, close: () => ctx.close() };
   }
 

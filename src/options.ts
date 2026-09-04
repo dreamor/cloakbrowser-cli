@@ -103,9 +103,18 @@ function buildFingerprintArgs(opts: LaunchOpts): string[] {
 
 export function resolveLaunchOpts(opts: LaunchOpts): ResolvedLaunchOpts {
   const launchOptions: Record<string, unknown> = {};
+  // cloakbrowser's LaunchOptions/LaunchContextOptions only define a fixed
+  // top-level field set (headless, proxy, userAgent, viewport, ...). Fields
+  // that aren't in that interface — but are real Playwright launch()/
+  // newContext() options — are silently dropped unless nested under these
+  // two passthrough properties. Confirmed empirically against cloakbrowser
+  // 0.5.10: top-level `extraHTTPHeaders`/`storageState`/`slowMo` are all
+  // no-ops; nesting them here is what actually applies them.
+  const rawLaunchOptions: Record<string, unknown> = {};
+  const contextOptions: Record<string, unknown> = {};
 
   if (opts.headless !== undefined) launchOptions.headless = opts.headless;
-  if (opts.channel) launchOptions.channel = opts.channel;
+  if (opts.channel) rawLaunchOptions.channel = opts.channel;
   if (opts.releaseChannel) {
     if (opts.releaseChannel !== 'stable' && opts.releaseChannel !== 'preview') {
       throw new CloakError(
@@ -134,12 +143,12 @@ export function resolveLaunchOpts(opts: LaunchOpts): ResolvedLaunchOpts {
   if (opts.locale) launchOptions.locale = opts.locale;
   if (opts.timezone) launchOptions.timezoneId = opts.timezone;
   if (opts.colorScheme) launchOptions.colorScheme = opts.colorScheme;
-  if (opts.storageState) launchOptions.storageState = opts.storageState;
+  if (opts.storageState) contextOptions.storageState = opts.storageState;
   if (opts.extraHeaders) {
-    launchOptions.extraHTTPHeaders = parseJsonArg(opts.extraHeaders, 'extra-headers');
+    contextOptions.extraHTTPHeaders = parseJsonArg(opts.extraHeaders, 'extra-headers');
   }
   if (opts.permissions) {
-    launchOptions.permissions = parseJsonArg<string[]>(opts.permissions, 'permissions');
+    contextOptions.permissions = parseJsonArg<string[]>(opts.permissions, 'permissions');
   }
   if (opts.extensions && opts.extensions.length > 0) {
     // CloakBrowser JS wrapper only reads camelCase `extensionPaths`; the
@@ -147,10 +156,10 @@ export function resolveLaunchOpts(opts: LaunchOpts): ResolvedLaunchOpts {
     launchOptions.extensionPaths = opts.extensions;
   }
   if (opts.slowMo !== undefined) {
-    launchOptions.slowMo = parseInteger(opts.slowMo, 'slow-mo');
+    rawLaunchOptions.slowMo = parseInteger(opts.slowMo, 'slow-mo');
   }
   if (opts.timeout !== undefined) {
-    launchOptions.timeout = parseInteger(opts.timeout, 'timeout');
+    rawLaunchOptions.timeout = parseInteger(opts.timeout, 'timeout');
   }
 
   const args: string[] = [];
@@ -163,6 +172,9 @@ export function resolveLaunchOpts(opts: LaunchOpts): ResolvedLaunchOpts {
     args.push(...extra);
   }
   if (args.length > 0) launchOptions.args = args;
+
+  if (Object.keys(rawLaunchOptions).length > 0) launchOptions.launchOptions = rawLaunchOptions;
+  if (Object.keys(contextOptions).length > 0) launchOptions.contextOptions = contextOptions;
 
   const persistentDir = opts.persistent;
   const wantsContext = Boolean(

@@ -56,13 +56,37 @@ describe('resolveLaunchOpts', () => {
     expect(r.wantsContext).toBe(true);
   });
 
-  it('forwards extra-headers and permissions', () => {
+  it('nests extra-headers, permissions, and storage-state under contextOptions', () => {
+    // cloakbrowser's LaunchContextOptions has no top-level extraHTTPHeaders/
+    // permissions/storageState fields — they're silently dropped unless
+    // nested under `contextOptions` (confirmed empirically against a real
+    // cloakbrowser 0.5.10 launchContext() call).
     const r = resolveLaunchOpts({
       extraHeaders: '{"X-Test":"1"}',
       permissions: '["geolocation"]',
+      storageState: '/tmp/state.json',
     });
-    expect(r.launchOptions.extraHTTPHeaders).toEqual({ 'X-Test': '1' });
-    expect(r.launchOptions.permissions).toEqual(['geolocation']);
+    const contextOptions = r.launchOptions.contextOptions as Record<string, unknown>;
+    expect(contextOptions.extraHTTPHeaders).toEqual({ 'X-Test': '1' });
+    expect(contextOptions.permissions).toEqual(['geolocation']);
+    expect(contextOptions.storageState).toBe('/tmp/state.json');
+    expect(r.launchOptions.extraHTTPHeaders).toBeUndefined();
+    expect(r.launchOptions.permissions).toBeUndefined();
+    expect(r.launchOptions.storageState).toBeUndefined();
+  });
+
+  it('nests slow-mo, timeout, and channel under launchOptions (raw Playwright passthrough)', () => {
+    // Same issue: cloakbrowser's LaunchOptions has no top-level slowMo/
+    // timeout/channel fields. Confirmed empirically: top-level slowMo is a
+    // silent no-op, nested under `launchOptions` it actually delays actions.
+    const r = resolveLaunchOpts({ slowMo: '300', timeout: '5000', channel: 'chrome' });
+    const nested = r.launchOptions.launchOptions as Record<string, unknown>;
+    expect(nested.slowMo).toBe(300);
+    expect(nested.timeout).toBe(5000);
+    expect(nested.channel).toBe('chrome');
+    expect(r.launchOptions.slowMo).toBeUndefined();
+    expect(r.launchOptions.timeout).toBeUndefined();
+    expect(r.launchOptions.channel).toBeUndefined();
   });
 
   it('maps license-key and browser-version', () => {
