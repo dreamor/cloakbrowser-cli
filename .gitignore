@@ -13,6 +13,7 @@ coverage/
 test-results/
 .clang-format
 .codegraph/
+.claude/
 .npmrc
 
 # Agent-generated planning/docs — never commit to GitHub
