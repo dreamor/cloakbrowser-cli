@@ -177,9 +177,19 @@ export async function main(argv: string[]): Promise<void> {
   // `addCommand()` (used everywhere above) does NOT inherit these settings
   // from the parent the way `.command()` does, so they must be applied to
   // every command in the tree individually.
+  // Commander's default (`_allowExcessArguments = true`) silently drops any
+  // positional arguments beyond what a command declares — e.g. `cloak text
+  // <sid> garbage` or `cloak local-storage get <sid> some-key` both ran
+  // fine and ignored the extra word with no error. Reject them instead, so
+  // a typo'd extra argument surfaces as `commander.excessArguments`
+  // (INVALID_ARG) rather than silently doing something other than what was
+  // asked. Commands whose last argument is variadic (`<value...>`) are
+  // exempt automatically — commander never treats variadic overflow as
+  // "excess".
   const suppressDefaultOutput = (cmd: Command): void => {
     cmd.exitOverride();
     cmd.configureOutput({ writeErr: () => { /* suppressed; re-emitted as JSON below */ } });
+    cmd.allowExcessArguments(false);
     for (const sub of cmd.commands) suppressDefaultOutput(sub);
   };
   suppressDefaultOutput(program);
