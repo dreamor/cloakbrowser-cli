@@ -4,9 +4,9 @@ Thanks for your interest in contributing! This guide covers everything you need 
 
 ## Prerequisites
 
-- **Node.js** ≥ 20.0
+- **Node.js** 20.19+ or 22.12+
 - **npm** ≥ 10
-- **CloakBrowser** ≥ 0.3.0 (≥ 0.5.10 recommended; `npm install -g cloakbrowser` or as dev dependency)
+- **CloakBrowser** ≥ 0.3.0 (≥ 0.6.0 recommended; `npm install -g cloakbrowser` or as dev dependency)
 - **Playwright** ≥ 1.53.0 (`npm install -g playwright-core`)
 
 ## Setup

@@ -11,7 +11,7 @@
 - **Package Manager**: npm
 - **npm Package**: `@dreamor/cloakbrowser-cli`
 - **Category**: web / browser-automation
-- **Requires**: Node.js >= 20, cloakbrowser >= 0.3.0 (0.5.10+ recommended), playwright-core >= 1.53.0
+- **Requires**: Node.js 20.19+ or 22.12+, cloakbrowser >= 0.3.0 (0.6.0+ recommended), playwright-core >= 1.53.0
 - **Homepage**: https://github.com/dreamor/cloakbrowser-cli
 - **Source**: https://github.com/dreamor/cloakbrowser-cli
 

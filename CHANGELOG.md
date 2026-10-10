@@ -5,6 +5,12 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Changed
+
+- **Docs** — Verified compatibility with cloakbrowser 0.6.0 (typecheck + full unit suite pass unmodified against it — public API surface, i.e. `index.d.ts`/`playwright.d.ts`/`puppeteer.d.ts`/`config.d.ts`/`types.d.ts`, is byte-identical since 0.5.10; 0.5.11/0.5.12/0.6.0 only bumped the bundled Chromium (150→154, 71→87 patches) and added an internal `profile-seed` persistence helper for persistent profiles, neither of which this CLI calls directly). Bumped devDependency to `cloakbrowser >=0.6.0`. cloakbrowser 0.6.0 raises its minimum Node from `>=20.0.0` to `^20.19.0 || >=22.12.0`; `engines.node` and the README/SKILL/CONTRIBUTING version hints are updated to match.
+
 ## [0.5.10] - 2026-09-22
 
 ### Changed
